@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { resolvePrayerState, getTodayPrayerTimes, PrayerTimes, PrayerState } from '@/lib/prayer/prayerEngine';
+import { resolvePrayerState, getTodayPrayerTimes, formatTo12Hour, PrayerTimes, PrayerState } from '@/lib/prayer/prayerEngine';
 import { AdhanModal } from './AdhanModal';
 
 export const TVDisplay: React.FC = () => {
@@ -77,10 +77,10 @@ export const TVDisplay: React.FC = () => {
           </div>
         </div>
 
-        {/* Real-time Clock & Dates */}
+        {/* Real-time Clock (12-hour format with AM/PM) & Dates */}
         <div className="text-right flex items-center gap-6">
           <div className="text-5xl font-black font-mono tracking-tight text-white drop-shadow-md">
-            {time.toLocaleTimeString('en-US', { hour12: false })}
+            {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
           </div>
           <div className="h-10 w-px bg-slate-700/60" />
           <div className="text-right">
@@ -118,8 +118,9 @@ export const TVDisplay: React.FC = () => {
                   )}
                 </div>
 
-                <div className={`text-5xl font-black font-mono tracking-tight ${isActive ? 'text-amber-400 drop-shadow-lg' : 'text-white'}`}>
-                  {item.timeStr}
+                {/* 12-Hour Formatted Prayer Time */}
+                <div className={`text-4xl font-black font-mono tracking-tight ${isActive ? 'text-amber-400 drop-shadow-lg' : 'text-white'}`}>
+                  {formatTo12Hour(item.timeStr)}
                 </div>
 
                 <div className="flex justify-between items-center text-xs font-semibold text-slate-400 border-t border-white/5 pt-3">

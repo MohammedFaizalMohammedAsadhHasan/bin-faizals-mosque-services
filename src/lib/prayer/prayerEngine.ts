@@ -23,6 +23,26 @@ export interface PrayerState {
 }
 
 /**
+ * Converts 24-hour time string (HH:mm) to 12-hour format (hh:mm AM/PM)
+ */
+export function formatTo12Hour(timeStr: string, includeAmPm: boolean = true): string {
+  if (!timeStr || timeStr === '-') return timeStr;
+  const parts = timeStr.split(':');
+  if (parts.length < 2) return timeStr;
+
+  let h = parseInt(parts[0], 10);
+  const m = parts[1];
+  if (isNaN(h)) return timeStr;
+
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12;
+  if (h === 0) h = 12;
+
+  const formattedH = h.toString().padStart(2, '0');
+  return includeAmPm ? `${formattedH}:${m} ${ampm}` : `${formattedH}:${m}`;
+}
+
+/**
  * Calculates time remaining in seconds until target time HH:mm
  */
 export function getSecondsUntil(targetTimeStr: string, now: Date = new Date()): number {

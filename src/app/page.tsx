@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { QiblaCompass } from '@/components/pwa/QiblaCompass';
-import { getTodayPrayerTimes, resolvePrayerState, PrayerTimes, PrayerState } from '@/lib/prayer/prayerEngine';
+import { getTodayPrayerTimes, resolvePrayerState, formatTo12Hour, PrayerTimes, PrayerState } from '@/lib/prayer/prayerEngine';
 
 export default function PublicHomePage() {
   const [times, setTimes] = useState<PrayerTimes | null>(null);
@@ -96,7 +96,7 @@ export default function PublicHomePage() {
       <section className="glass-panel p-8 rounded-3xl mb-12 border border-slate-800">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-black text-slate-100 uppercase tracking-wide">
-            Today&apos;s Official Schedule
+            Today&apos;s Official Schedule (12-Hour Format)
           </h3>
           <a
             href="/sample-annual-timetable.csv"
@@ -129,8 +129,8 @@ export default function PublicHomePage() {
                 <div className={`text-xs font-extrabold uppercase tracking-wider ${isActive ? 'text-amber-300' : 'text-emerald-400'}`}>
                   {item.name}
                 </div>
-                <div className={`text-3xl font-black font-mono my-2 ${isActive ? 'text-amber-400' : 'text-slate-100'}`}>
-                  {item.azan}
+                <div className={`text-2xl font-black font-mono my-2 ${isActive ? 'text-amber-400' : 'text-slate-100'}`}>
+                  {formatTo12Hour(item.azan)}
                 </div>
                 <div className="text-xs text-slate-400 font-semibold">Iqamah: {item.iqamah}</div>
               </div>
