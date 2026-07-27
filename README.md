@@ -1,7 +1,11 @@
 # 🕌 BIN FAIZAL'S Mosque Services
 
-> **Enterprise Digital Mosque Management & Smart Display Ecosystem**
-> Complete solution for Android TV Smart Displays, Public Community PWA, Automated Prayer Timetables, and Mosque Administration.
+[![Production Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://bin-faizals-mosque-services.vercel.app)
+[![Release Version](https://img.shields.io/badge/Release-v1.0.0-064e3b?style=for-the-badge&logo=github)](https://github.com/MohammedFaizalMohammedAsadhHasan/bin-faizals-mosque-services)
+[![Build Status](https://img.shields.io/badge/CI%2FCD-Passed-emerald?style=for-the-badge&logo=githubactions)](https://github.com/MohammedFaizalMohammedAsadhHasan/bin-faizals-mosque-services/actions)
+
+> **Enterprise Digital Mosque Management & Smart Display Ecosystem**  
+> Unified solution for Android TV Kiosk Signboards, Community PWA, 3-Tier Prayer Calculation Engines, Offline IndexedDB Storage, and Mosque Administration.
 
 ---
 
@@ -9,31 +13,29 @@
 
 **BIN FAIZAL'S Mosque Services** is a modern, enterprise-level digital platform tailored for mosques and Islamic centers worldwide. It unifies high-reliability kiosk TV displays, responsive web/PWA interfaces for worshippers, high-precision prayer calculation engines, and an intuitive admin management suite.
 
-### Key Platforms & Applications
+### Key Platforms & Features (Phases 1 - 6 Delivered)
 
 1. **📺 Android TV Kiosk System (Digital Signboard)**
-   - Auto-booting, continuous kiosk mode display optimized for 1080p / 4K TV screens.
-   - Live counting clock, Azan audio visual alerts, Iqamah countdowns, Solat (Jama'at) mode screen dimmer.
-   - Sliding Hadith/Quran verses, Islamic announcements, Jummah schedules, and weather updates.
-   - 100% offline-first architecture with local cache resilience.
+   - Auto-booting `BootReceiver` launching app on TV box startup after power outages.
+   - Hardware acceleration, Screen Wake Lock (`FLAG_KEEP_SCREEN_ON`), sticky immersive full-screen display.
+   - Live counting 12-hour clock, Azan audio-visual modals, Iqamah countdowns, and news ticker.
+   - Native Android TV App source code located in [`android/`](./android/README.md).
 
-2. **🌐 Public Web Portal & Progressive Web App (PWA)**
-   - Responsive community app installable on iOS, Android, and Desktop.
-   - Real-time prayer timetables with local geolocation or custom mosque schedules.
-   - Daily Dua, Hadith of the Day, Qur'an Verse of the Day, Qibla directional compass.
-   - Offline service worker caching and push notifications for urgent mosque announcements.
+2. **🎨 Luxury UI/UX Design System**
+   - Branded **BIN FAIZAL'S** splash screen with animated progress ring loader.
+   - Ambient glowing "Bubbles Snow" HTML5 particle canvas animation (`AmbientBubbles.tsx`).
+   - Dark luxury gold & emerald palette (`#020617`, `#064e3b`, `#d97706`) with high-density backdrop blur glassmorphism cards.
 
-3. **🛠 Mosque Administration Console**
-   - Secure Role-Based Access Control (Super Admin, Imam, Mutawalli/Staff).
-   - Monthly prayer timetable CSV/JSON bulk importer and manual editor.
-   - Announcement builder with scheduled publishing and emergency broadcast triggers.
-   - Gallery & Media Uploader (Images, Videos, PDFs for Jummah Khutbah).
-   - System audit logs, automated database backups, and TV device telemetry monitoring.
+3. **📱 Progressive Web App (PWA) & Offline Engine**
+   - Custom 1-click PWA installation prompt banner (`PWAInstallPrompt.tsx`).
+   - Service Worker (`public/sw.js`) with Web Push notifications for Azan alerts, background sync (`sync`), and cache-first strategies.
+   - 100% offline-first architecture with IndexedDB data layer (`src/lib/offline/db.ts`).
 
-4. **🕌 High-Precision Prayer Engine**
-   - Built-in mathematical calculation algorithms: Muslim World League (MWL), ISNA, Umm Al-Qura (Makkah), Egyptian General Authority of Survey, University of Islamic Sciences (Karachi), Shia Ithna-Ashari, Moonsighting Committee.
-   - Custom Hijri calendar date offset adjustment.
-   - Ramadan Mode (Suhoor/Iftar countdowns, Taraweeh timing) and Eid festival modes.
+4. **🕌 3-Tier Prayer Calculation Engine**
+   - **Tier 1**: Uploaded official annual CSV timetable stored in IndexedDB.
+   - **Tier 2**: Embedded 12-month mosque annual schedule dataset.
+   - **Tier 3**: Astronomical solar math calculation engine (Muslim World League 18° / Umm Al-Qura standards).
+   - Dynamic Gregorian-to-Hijri calendar converter with Arabic typography (`hijriEngine.ts`) and manual offset adjustments.
 
 ---
 
@@ -51,15 +53,9 @@ This repository contains full enterprise documentation organized into 8 Volumes 
 | **🛠 Volume 6** | Mosque Admin Management Console | [`docs/Volume_6_Admin_Panel.md`](./docs/Volume_6_Admin_Panel.md) |
 | **💾 Volume 7** | Backend Engine & Database Specifications | [`docs/Volume_7_Backend_Database.md`](./docs/Volume_7_Backend_Database.md) |
 | **🚀 Volume 8** | Production, Deployment & APK Build Guide | [`docs/Volume_8_Production_Deployment.md`](./docs/Volume_8_Production_Deployment.md) |
+| **📱 Android TV APK Guide** | Native APK Compilation & ADB Deployment | [`android/README.md`](./android/README.md) |
+| **📄 Testing Protocol** | Production Quality Assurance Guide | [`docs/bonus/TESTING_GUIDE.md`](./docs/bonus/TESTING_GUIDE.md) |
 
-### Supplementary Technical Documentation
-
-- **Software Design Document (SDD)**: [`docs/bonus/SDD.md`](./docs/bonus/SDD.md)
-- **API Documentation**: [`docs/bonus/API_DOCUMENTATION.md`](./docs/bonus/API_DOCUMENTATION.md)
-- **Database Schema & Architecture**: [`docs/bonus/DATABASE_DESIGN.md`](./docs/bonus/DATABASE_DESIGN.md)
-- **User Manual**: [`docs/bonus/USER_MANUAL.md`](./docs/bonus/USER_MANUAL.md)
-- **Administrator Manual**: [`docs/bonus/ADMIN_MANUAL.md`](./docs/bonus/ADMIN_MANUAL.md)
-- **Testing & QA Suite**: [`docs/bonus/TESTING_GUIDE.md`](./docs/bonus/TESTING_GUIDE.md)
 
 ---
 
