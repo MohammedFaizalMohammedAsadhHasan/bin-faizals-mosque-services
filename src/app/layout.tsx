@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { SWRegistration } from '@/components/pwa/SWRegistration';
+import { PWAInstallPrompt } from '@/components/pwa/PWAInstallPrompt';
+import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 
 export const metadata: Metadata = {
   title: "BIN FAIZAL'S Mosque Services - Smart Display & PWA",
@@ -23,10 +25,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-[#030712] text-slate-100 min-h-screen antialiased font-sans">
+        <PWAInstallPrompt />
         {children}
+        <OfflineIndicator />
         <SWRegistration />
       </body>
     </html>
   );
 }
+
 
