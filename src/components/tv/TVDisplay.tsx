@@ -1,11 +1,39 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { resolvePrayerState, resolvePrayerTimesAsync, formatTo12Hour, PrayerTimes, PrayerState } from '@/lib/prayer/prayerEngine';
 import { getFormattedHijriDate } from '@/lib/prayer/hijriEngine';
 import { AdhanModal } from './AdhanModal';
 import { SplashScreen } from '@/components/ui/SplashScreen';
 import { AmbientBubbles } from '@/components/ui/AmbientBubbles';
+
+const SLIDES = [
+  {
+    type: 'HADITH OF THE DAY',
+    icon: '📖',
+    content: '“The best among you are those who learn the Qur\'an and teach it to others.”',
+    reference: '— Sahih Al-Bukhari (5027)',
+  },
+  {
+    type: 'QURAN VERSE OF THE DAY',
+    icon: '🌟',
+    content: '“Verily, in the remembrance of Allah do hearts find rest.”',
+    reference: '— Surah Ar-Ra\'d (13:28)',
+  },
+  {
+    type: 'MOSQUE DONATION',
+    icon: '💳',
+    content: 'Support mosque maintenance and expansion. Scan QR code at entrance or transfer to Maybank 564123984012.',
+    reference: '— JazakAllahu Khairan',
+  },
+  {
+    type: 'JUMMAH ANNOUNCEMENT',
+    icon: '🕌',
+    content: 'Jumm\'ah Khutbah begins at 12:30 PM. Please silence all mobile phones before entering the main prayer hall.',
+    reference: '— BIN FAIZAL\'S Mosque Administration',
+  },
+];
 
 export const TVDisplay: React.FC = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -14,6 +42,8 @@ export const TVDisplay: React.FC = () => {
   const [prayerState, setPrayerState] = useState<PrayerState | null>(null);
   const [hijriDateStr, setHijriDateStr] = useState('');
   const [dismissedAzan, setDismissedAzan] = useState(false);
+  const [slideIndex, setSlideIndex] = useState(0);
+  const [showAdminMenu, setShowAdminMenu] = useState(false);
 
   useEffect(() => {
     const initSchedule = async () => {
@@ -36,7 +66,25 @@ export const TVDisplay: React.FC = () => {
       setHijriDateStr(getFormattedHijriDate(current));
     }, 1000);
 
-    return () => clearInterval(timer);
+    // Auto-rotating slide carousel every 10 seconds
+    const slideTimer = setInterval(() => {
+      setSlideIndex((prev) => (prev + 1) % SLIDES.length);
+    }, 10000);
+
+    // DPAD remote control key listener ('0' key toggles secret admin menu)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '0' || e.key === 'i' || e.key === 'I') {
+        setShowAdminMenu((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      clearInterval(timer);
+      clearInterval(slideTimer);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const formatSeconds = (sec: number) => {
@@ -54,6 +102,8 @@ export const TVDisplay: React.FC = () => {
     { key: 'maghrib', label: 'MAGHRIB', timeStr: prayerTimes.maghrib },
     { key: 'isha', label: 'ISHA', timeStr: prayerTimes.isha },
   ] : [];
+
+  const currentSlide = SLIDES[slideIndex];
 
   return (
     <>
@@ -108,7 +158,6 @@ export const TVDisplay: React.FC = () => {
             </div>
           </header>
 
-
           {/* Center Grid Area */}
           <main className="grid grid-cols-12 gap-6 my-4 flex-1 items-stretch overflow-hidden relative z-10">
             {/* Left Side: 6 Prayer Time Cards */}
@@ -147,7 +196,7 @@ export const TVDisplay: React.FC = () => {
               })}
             </div>
 
-            {/* Right Side: Hero Countdown + Educational Slide */}
+            {/* Right Side: Hero Countdown + Auto-Rotating Educational Slide */}
             <div className="col-span-4 flex flex-col gap-5 h-full">
               {/* Countdown Hero Box */}
               <div className="glass-card-hero p-6 rounded-2xl flex flex-col items-center justify-center text-center flex-1 relative overflow-hidden border border-teal-400/40 shadow-2xl">
@@ -165,16 +214,24 @@ export const TVDisplay: React.FC = () => {
                 </p>
               </div>
 
-              {/* Hadith / Quran Slide */}
-              <div className="glass-panel p-6 rounded-2xl flex flex-col justify-center flex-1 border border-slate-700/60 shadow-xl">
-                <div className="flex items-center gap-2 text-amber-400 text-xs font-extrabold tracking-widest uppercase mb-3">
-                  <span>📖 HADITH OF THE DAY</span>
+              {/* Auto-Rotating Slide Carousel */}
+              <div className="glass-panel p-6 rounded-2xl flex flex-col justify-between flex-1 border border-slate-700/60 shadow-xl transition-all duration-500">
+                <div className="flex justify-between items-center text-amber-400 text-xs font-extrabold tracking-widest uppercase mb-2">
+                  <span className="flex items-center gap-2">
+                    <span>{currentSlide.icon}</span>
+                    <span>{currentSlide.type}</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    {slideIndex + 1} / {SLIDES.length}
+                  </span>
                 </div>
-                <p className="text-slate-100 text-sm font-medium leading-relaxed italic">
-                  &ldquo;The best among you are those who learn the Qur&apos;an and teach it to others.&rdquo;
+
+                <p className="text-slate-100 text-sm font-medium leading-relaxed italic my-2">
+                  {currentSlide.content}
                 </p>
-                <div className="text-xs text-amber-300/80 font-bold mt-3">
-                  — Sahih Al-Bukhari (5027)
+
+                <div className="text-xs text-amber-300/80 font-bold mt-2 border-t border-white/10 pt-2">
+                  {currentSlide.reference}
                 </div>
               </div>
             </div>
@@ -191,9 +248,38 @@ export const TVDisplay: React.FC = () => {
               </div>
             </div>
           </footer>
+
+          {/* Secret TV Remote Admin Modal Overlay (Triggered by '0' Key) */}
+          {showAdminMenu && (
+            <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-6">
+              <div className="glass-panel p-8 rounded-3xl max-w-lg w-full border border-amber-500/40 text-center">
+                <h3 className="text-2xl font-black text-amber-400 uppercase mb-2">TV Kiosk Settings</h3>
+                <p className="text-xs text-slate-300 mb-6">Press &apos;0&apos; on TV Remote or Back to close this menu</p>
+                <div className="flex flex-col gap-3">
+                  <Link
+                    href="/admin"
+                    className="py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition-colors"
+                  >
+                    Open Mosque Admin Portal
+                  </Link>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="py-3 px-4 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold rounded-xl text-sm transition-colors"
+                  >
+                    Force Reload TV Kiosk
+                  </button>
+                  <button
+                    onClick={() => setShowAdminMenu(false)}
+                    className="py-2 text-xs text-slate-400 hover:text-white"
+                  >
+                    Close Menu
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>
   );
 };
-
