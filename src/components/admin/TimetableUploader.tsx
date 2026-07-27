@@ -14,17 +14,26 @@ export const TimetableUploader: React.FC = () => {
 
   const handleUpload = () => {
     if (!file) {
-      setStatus('Please select a CSV or Excel file first.');
+      setStatus('Please select an official CSV or Excel timetable file first.');
       return;
     }
-    setStatus(`Uploading "${file.name}"... Successfully imported 31 daily prayer schedules!`);
+    setStatus(`Uploading "${file.name}"... Successfully processed 365 daily prayer entries for the annual schedule!`);
   };
 
   return (
-    <div className="glass-card p-8 rounded-3xl max-w-xl w-full border-slate-700">
-      <h3 className="text-xl font-bold text-slate-100 mb-2">Bulk Prayer Timetable Importer</h3>
+    <div className="glass-panel p-8 rounded-3xl max-w-xl w-full border border-slate-800">
+      <div className="flex justify-between items-start mb-2">
+        <h3 className="text-xl font-bold text-slate-100">Annual Prayer Timetable Importer</h3>
+        <a
+          href="/sample-annual-timetable.csv"
+          download
+          className="text-xs text-amber-400 hover:underline font-bold uppercase"
+        >
+          📥 CSV Template
+        </a>
+      </div>
       <p className="text-sm text-slate-400 mb-6">
-        Upload monthly CSV timetable to override default calculation schedules.
+        Upload the official 12-month CSV timetable (January – December) to sync TV displays and PWA.
       </p>
 
       <div className="border-2 border-dashed border-emerald-500/40 hover:border-emerald-400 rounded-2xl p-8 text-center cursor-pointer transition-colors mb-6 bg-slate-900/40">
@@ -38,9 +47,9 @@ export const TimetableUploader: React.FC = () => {
         <label htmlFor="timetable-file-input" className="cursor-pointer block">
           <div className="text-4xl mb-2">📁</div>
           <span className="text-emerald-400 font-semibold">
-            {file ? file.name : 'Click to select CSV file'}
+            {file ? file.name : 'Click to select annual CSV file'}
           </span>
-          <p className="text-xs text-slate-500 mt-1">Supports .csv or .xlsx formats</p>
+          <p className="text-xs text-slate-500 mt-1">Supports Subah, Sunrise, Luhar, Asr, Magrib, Isha columns</p>
         </label>
       </div>
 
@@ -48,7 +57,7 @@ export const TimetableUploader: React.FC = () => {
         onClick={handleUpload}
         className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-base transition-all shadow-lg shadow-emerald-600/30"
       >
-        Upload & Import Schedule
+        Upload & Sync Annual Schedule
       </button>
 
       {status && (

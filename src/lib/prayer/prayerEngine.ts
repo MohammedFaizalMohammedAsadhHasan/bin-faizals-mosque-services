@@ -3,6 +3,8 @@
  * BIN FAIZAL'S Mosque Services
  */
 
+import { getScheduleForDate } from './annualScheduleData';
+
 export interface PrayerTimes {
   fajr: string;
   sunrise: string;
@@ -39,9 +41,18 @@ export function getSecondsUntil(targetTimeStr: string, now: Date = new Date()): 
 }
 
 /**
+ * Gets exact prayer times for today from official annual mosque timetable
+ */
+export function getTodayPrayerTimes(now: Date = new Date()): PrayerTimes {
+  return getScheduleForDate(now);
+}
+
+/**
  * Resolves current and next prayer from daily prayer times schedule
  */
-export function resolvePrayerState(times: PrayerTimes, now: Date = new Date()): PrayerState {
+export function resolvePrayerState(times?: PrayerTimes, now: Date = new Date()): PrayerState {
+  const activeTimes = times || getTodayPrayerTimes(now);
+
   const timeToMinutes = (timeStr: string) => {
     const [h, m] = timeStr.split(':').map(Number);
     return h * 60 + m;
@@ -50,17 +61,17 @@ export function resolvePrayerState(times: PrayerTimes, now: Date = new Date()): 
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
   const schedule: { name: keyof PrayerTimes; minutes: number; timeStr: string }[] = [
-    { name: 'fajr', minutes: timeToMinutes(times.fajr), timeStr: times.fajr },
-    { name: 'sunrise', minutes: timeToMinutes(times.sunrise), timeStr: times.sunrise },
-    { name: 'dhuhr', minutes: timeToMinutes(times.dhuhr), timeStr: times.dhuhr },
-    { name: 'asr', minutes: timeToMinutes(times.asr), timeStr: times.asr },
-    { name: 'maghrib', minutes: timeToMinutes(times.maghrib), timeStr: times.maghrib },
-    { name: 'isha', minutes: timeToMinutes(times.isha), timeStr: times.isha },
+    { name: 'fajr', minutes: timeToMinutes(activeTimes.fajr), timeStr: activeTimes.fajr },
+    { name: 'sunrise', minutes: timeToMinutes(activeTimes.sunrise), timeStr: activeTimes.sunrise },
+    { name: 'dhuhr', minutes: timeToMinutes(activeTimes.dhuhr), timeStr: activeTimes.dhuhr },
+    { name: 'asr', minutes: timeToMinutes(activeTimes.asr), timeStr: activeTimes.asr },
+    { name: 'maghrib', minutes: timeToMinutes(activeTimes.maghrib), timeStr: activeTimes.maghrib },
+    { name: 'isha', minutes: timeToMinutes(activeTimes.isha), timeStr: activeTimes.isha },
   ];
 
   let currentPrayer: keyof PrayerTimes = 'isha';
   let nextPrayer: keyof PrayerTimes = 'fajr';
-  let nextPrayerTimeStr = times.fajr;
+  let nextPrayerTimeStr = activeTimes.fajr;
 
   for (let i = 0; i < schedule.length; i++) {
     if (currentMinutes < schedule[i].minutes) {

@@ -1,37 +1,34 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { resolvePrayerState, PrayerTimes, PrayerState } from '@/lib/prayer/prayerEngine';
+import { resolvePrayerState, getTodayPrayerTimes, PrayerTimes, PrayerState } from '@/lib/prayer/prayerEngine';
 import { AdhanModal } from './AdhanModal';
-
-const DEFAULT_PRAYER_TIMES: PrayerTimes = {
-  fajr: '04:30',
-  sunrise: '05:48',
-  dhuhr: '12:30',
-  asr: '15:45',
-  maghrib: '18:50',
-  isha: '20:10',
-};
 
 export const TVDisplay: React.FC = () => {
   const [time, setTime] = useState<Date | null>(null);
+  const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
   const [prayerState, setPrayerState] = useState<PrayerState | null>(null);
   const [dismissedAzan, setDismissedAzan] = useState(false);
 
   useEffect(() => {
-    setTime(new Date());
-    setPrayerState(resolvePrayerState(DEFAULT_PRAYER_TIMES, new Date()));
+    const now = new Date();
+    const activeTimes = getTodayPrayerTimes(now);
+    setTime(now);
+    setPrayerTimes(activeTimes);
+    setPrayerState(resolvePrayerState(activeTimes, now));
 
     const timer = setInterval(() => {
-      const now = new Date();
-      setTime(now);
-      setPrayerState(resolvePrayerState(DEFAULT_PRAYER_TIMES, now));
+      const current = new Date();
+      const todayTimes = getTodayPrayerTimes(current);
+      setTime(current);
+      setPrayerTimes(todayTimes);
+      setPrayerState(resolvePrayerState(todayTimes, current));
     }, 1000);
 
     return () => clearInterval(timer);
   }, []);
 
-  if (!time || !prayerState) {
+  if (!time || !prayerTimes || !prayerState) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-[#030712] text-amber-400 font-extrabold text-3xl tracking-widest uppercase">
         Initializing BIN FAIZAL&apos;S TV Display System...
@@ -47,12 +44,12 @@ export const TVDisplay: React.FC = () => {
   };
 
   const prayersList: { key: keyof PrayerTimes; label: string; timeStr: string }[] = [
-    { key: 'fajr', label: 'FAJR', timeStr: DEFAULT_PRAYER_TIMES.fajr },
-    { key: 'sunrise', label: 'SUNRISE', timeStr: DEFAULT_PRAYER_TIMES.sunrise },
-    { key: 'dhuhr', label: 'DHUHR', timeStr: DEFAULT_PRAYER_TIMES.dhuhr },
-    { key: 'asr', label: 'ASR', timeStr: DEFAULT_PRAYER_TIMES.asr },
-    { key: 'maghrib', label: 'MAGHRIB', timeStr: DEFAULT_PRAYER_TIMES.maghrib },
-    { key: 'isha', label: 'ISHA', timeStr: DEFAULT_PRAYER_TIMES.isha },
+    { key: 'fajr', label: 'FAJR / SUBAH', timeStr: prayerTimes.fajr },
+    { key: 'sunrise', label: 'SUNRISE', timeStr: prayerTimes.sunrise },
+    { key: 'dhuhr', label: 'DHUHR / LUHAR', timeStr: prayerTimes.dhuhr },
+    { key: 'asr', label: 'ASR', timeStr: prayerTimes.asr },
+    { key: 'maghrib', label: 'MAGHRIB', timeStr: prayerTimes.maghrib },
+    { key: 'isha', label: 'ISHA', timeStr: prayerTimes.isha },
   ];
 
   return (
@@ -65,7 +62,7 @@ export const TVDisplay: React.FC = () => {
       />
 
       {/* Top Header Bar */}
-      <header className="glass-panel flex justify-between items-center px-8 py-4 rounded-2xl shrink-0">
+      <header className="glass-panel flex justify-between items-center px-8 py-4 rounded-2xl shrink-0 border border-slate-800">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center font-bold text-slate-950 text-2xl shadow-lg shadow-amber-500/30">
             BF
@@ -75,7 +72,7 @@ export const TVDisplay: React.FC = () => {
               BIN FAIZAL&apos;S MOSQUE
             </h1>
             <p className="text-sm font-semibold tracking-widest text-emerald-400 uppercase">
-              MAIN PRAYER HALL SMART DISPLAY
+              OFFICIAL ANNUAL PRAYER TIMETABLE DISPLAY
             </p>
           </div>
         </div>
@@ -99,7 +96,7 @@ export const TVDisplay: React.FC = () => {
 
       {/* Center Grid Area */}
       <main className="grid grid-cols-12 gap-6 my-4 flex-1 items-stretch overflow-hidden">
-        {/* Left Side: 6 Prayer Time Cards (2 Rows x 3 Columns) */}
+        {/* Left Side: 6 Prayer Time Cards */}
         <div className="col-span-8 grid grid-cols-3 grid-rows-2 gap-5 h-full">
           {prayersList.map((item) => {
             const isActive = prayerState.nextPrayer === item.key;
@@ -111,7 +108,7 @@ export const TVDisplay: React.FC = () => {
                 }`}
               >
                 <div className="flex justify-between items-center">
-                  <span className={`text-lg font-black tracking-widest uppercase ${isActive ? 'text-amber-300' : 'text-slate-400'}`}>
+                  <span className={`text-base font-black tracking-widest uppercase ${isActive ? 'text-amber-300' : 'text-slate-400'}`}>
                     {item.label}
                   </span>
                   {isActive && (
@@ -168,7 +165,7 @@ export const TVDisplay: React.FC = () => {
       </main>
 
       {/* Bottom Announcement Ticker */}
-      <footer className="glass-panel px-6 py-3 rounded-2xl flex items-center shrink-0">
+      <footer className="glass-panel px-6 py-3 rounded-2xl flex items-center shrink-0 border border-slate-800">
         <div className="px-4 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-black tracking-widest uppercase rounded-lg mr-5 shrink-0 shadow-md">
           ANNOUNCEMENT
         </div>
