@@ -1,9 +1,12 @@
 /**
- * Core Prayer Calculation & State Resolver Engine
+ * Core Unified Prayer Calculation & State Resolver Engine
+ * 3-Tier Resolution System: IndexedDB -> Static CSV -> Astronomical Calculation Fallback
  * BIN FAIZAL'S Mosque Services
  */
 
 import { getScheduleForDate } from './annualScheduleData';
+import { calculateAstronomicalPrayerTimes } from './astronomicalEngine';
+import { getTimetableForDate } from '@/lib/offline/db';
 
 export interface PrayerTimes {
   fajr: string;
@@ -61,10 +64,49 @@ export function getSecondsUntil(targetTimeStr: string, now: Date = new Date()): 
 }
 
 /**
- * Gets exact prayer times for today from official annual mosque timetable
+ * Sync synchronous prayer time lookup (Static Schedule)
  */
 export function getTodayPrayerTimes(now: Date = new Date()): PrayerTimes {
   return getScheduleForDate(now);
+}
+
+/**
+ * Async 3-Tier Prayer Schedule Resolution Engine:
+ * 1. IndexedDB uploaded CSV timetable
+ * 2. Static annual timetable dataset
+ * 3. Astronomical math calculation engine
+ */
+export async function resolvePrayerTimesAsync(now: Date = new Date()): Promise<PrayerTimes> {
+  const year = now.getFullYear();
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  const day = now.getDate().toString().padStart(2, '0');
+  const dateKey = `${year}-${month}-${day}`;
+
+  try {
+    // Tier 1: Check IndexedDB Offline Cache
+    const cached = await getTimetableForDate(dateKey);
+    if (cached && cached.fajr && cached.dhuhr) {
+      return {
+        fajr: cached.fajr,
+        sunrise: cached.sunrise,
+        dhuhr: cached.dhuhr,
+        asr: cached.asr,
+        maghrib: cached.maghrib,
+        isha: cached.isha,
+      };
+    }
+  } catch {
+    // IndexedDB unavailable, proceed to Tier 2
+  }
+
+  // Tier 2: Static Timetable
+  const staticTimes = getScheduleForDate(now);
+  if (staticTimes && staticTimes.fajr) {
+    return staticTimes;
+  }
+
+  // Tier 3: Astronomical Calculation Fallback
+  return calculateAstronomicalPrayerTimes(now);
 }
 
 /**

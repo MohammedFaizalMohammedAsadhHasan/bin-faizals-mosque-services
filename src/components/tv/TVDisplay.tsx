@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { resolvePrayerState, getTodayPrayerTimes, formatTo12Hour, PrayerTimes, PrayerState } from '@/lib/prayer/prayerEngine';
+import { resolvePrayerState, resolvePrayerTimesAsync, formatTo12Hour, PrayerTimes, PrayerState } from '@/lib/prayer/prayerEngine';
+import { getFormattedHijriDate } from '@/lib/prayer/hijriEngine';
 import { AdhanModal } from './AdhanModal';
 import { SplashScreen } from '@/components/ui/SplashScreen';
 import { AmbientBubbles } from '@/components/ui/AmbientBubbles';
@@ -11,21 +12,28 @@ export const TVDisplay: React.FC = () => {
   const [time, setTime] = useState<Date | null>(null);
   const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
   const [prayerState, setPrayerState] = useState<PrayerState | null>(null);
+  const [hijriDateStr, setHijriDateStr] = useState('');
   const [dismissedAzan, setDismissedAzan] = useState(false);
 
   useEffect(() => {
-    const now = new Date();
-    const activeTimes = getTodayPrayerTimes(now);
-    setTime(now);
-    setPrayerTimes(activeTimes);
-    setPrayerState(resolvePrayerState(activeTimes, now));
+    const initSchedule = async () => {
+      const now = new Date();
+      const activeTimes = await resolvePrayerTimesAsync(now);
+      setTime(now);
+      setPrayerTimes(activeTimes);
+      setPrayerState(resolvePrayerState(activeTimes, now));
+      setHijriDateStr(getFormattedHijriDate(now));
+    };
 
-    const timer = setInterval(() => {
+    initSchedule();
+
+    const timer = setInterval(async () => {
       const current = new Date();
-      const todayTimes = getTodayPrayerTimes(current);
+      const activeTimes = await resolvePrayerTimesAsync(current);
       setTime(current);
-      setPrayerTimes(todayTimes);
-      setPrayerState(resolvePrayerState(todayTimes, current));
+      setPrayerTimes(activeTimes);
+      setPrayerState(resolvePrayerState(activeTimes, current));
+      setHijriDateStr(getFormattedHijriDate(current));
     }, 1000);
 
     return () => clearInterval(timer);
@@ -94,11 +102,12 @@ export const TVDisplay: React.FC = () => {
                   {time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                 </div>
                 <div className="text-base font-arabic font-bold text-amber-300 mt-0.5">
-                  ١٢ صَفَر ١٤٤٨ هـ
+                  {hijriDateStr}
                 </div>
               </div>
             </div>
           </header>
+
 
           {/* Center Grid Area */}
           <main className="grid grid-cols-12 gap-6 my-4 flex-1 items-stretch overflow-hidden relative z-10">

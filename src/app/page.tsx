@@ -5,28 +5,37 @@ import Link from 'next/link';
 import { QiblaCompass } from '@/components/pwa/QiblaCompass';
 import { SplashScreen } from '@/components/ui/SplashScreen';
 import { AmbientBubbles } from '@/components/ui/AmbientBubbles';
-import { getTodayPrayerTimes, resolvePrayerState, formatTo12Hour, PrayerTimes, PrayerState } from '@/lib/prayer/prayerEngine';
+import { resolvePrayerTimesAsync, resolvePrayerState, formatTo12Hour, PrayerTimes, PrayerState } from '@/lib/prayer/prayerEngine';
+import { getFormattedHijriDate } from '@/lib/prayer/hijriEngine';
 
 export default function PublicHomePage() {
   const [showSplash, setShowSplash] = useState(true);
   const [times, setTimes] = useState<PrayerTimes | null>(null);
   const [prayerState, setPrayerState] = useState<PrayerState | null>(null);
+  const [hijriDateStr, setHijriDateStr] = useState('');
 
   useEffect(() => {
-    const now = new Date();
-    const todayTimes = getTodayPrayerTimes(now);
-    setTimes(todayTimes);
-    setPrayerState(resolvePrayerState(todayTimes, now));
+    const initSchedule = async () => {
+      const now = new Date();
+      const todayTimes = await resolvePrayerTimesAsync(now);
+      setTimes(todayTimes);
+      setPrayerState(resolvePrayerState(todayTimes, now));
+      setHijriDateStr(getFormattedHijriDate(now));
+    };
 
-    const timer = setInterval(() => {
+    initSchedule();
+
+    const timer = setInterval(async () => {
       const current = new Date();
-      const activeTimes = getTodayPrayerTimes(current);
+      const activeTimes = await resolvePrayerTimesAsync(current);
       setTimes(activeTimes);
       setPrayerState(resolvePrayerState(activeTimes, current));
+      setHijriDateStr(getFormattedHijriDate(current));
     }, 1000);
 
     return () => clearInterval(timer);
   }, []);
+
 
   const formatSeconds = (sec: number) => {
     const hrs = Math.floor(sec / 3600);
@@ -103,7 +112,7 @@ export default function PublicHomePage() {
                   </div>
                   <div className="text-right">
                     <span className="text-teal-300/80 block uppercase">Hijri Date</span>
-                    <span className="font-bold text-amber-300 font-arabic text-sm">١٢ صَفَر ١٤٤٨ هـ</span>
+                    <span className="font-bold text-amber-300 font-arabic text-sm">{hijriDateStr || '١٢ صَفَر ١٤٤٨ هـ'}</span>
                   </div>
                 </div>
               </div>
