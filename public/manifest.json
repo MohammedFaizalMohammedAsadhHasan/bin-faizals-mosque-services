@@ -1,0 +1,36 @@
+{
+  "name": "BIN FAIZAL'S Mosque Services",
+  "short_name": "MosqueServices",
+  "description": "Enterprise Digital Mosque Management System, Smart TV Kiosk & Community PWA",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#030712",
+  "theme_color": "#064e3b",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Smart TV Display",
+      "url": "/tv",
+      "description": "Open Smart TV Digital Kiosk Display"
+    },
+    {
+      "name": "Admin Portal",
+      "url": "/admin",
+      "description": "Open Mosque Admin Dashboard"
+    }
+  ]
+}
