@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 interface SplashScreenProps {
   onComplete?: () => void;
@@ -9,10 +9,15 @@ interface SplashScreenProps {
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({
   onComplete,
-  minDurationMs = 2200,
+  minDurationMs = 2000,
 }) => {
   const [progress, setProgress] = useState(0);
   const [fadeOut, setFadeOut] = useState(false);
+  const onCompleteRef = useRef(onComplete);
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   useEffect(() => {
     const startTime = Date.now();
@@ -25,13 +30,15 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
         clearInterval(interval);
         setFadeOut(true);
         setTimeout(() => {
-          if (onComplete) onComplete();
-        }, 500);
+          if (onCompleteRef.current) {
+            onCompleteRef.current();
+          }
+        }, 400);
       }
     }, 30);
 
     return () => clearInterval(interval);
-  }, [minDurationMs, onComplete]);
+  }, [minDurationMs]);
 
   return (
     <div
