@@ -150,11 +150,10 @@ export const DEFAULT_SETTINGS: TVSettings = {
     overlayOpacity: 55,
   },
   announcements: [
-    "📢 Welcome to BIN FAIZAL'S Mosque Services",
-    "🕌 Jumm'ah Khutbah begins at 12:30 PM. Please turn off or silence your mobile phones inside the prayer hall.",
+    "📢 Welcome to BIN FAIZAL'S Mosque Smart TV",
+    "Please turn off or silence your mobile phones inside the prayer hall.",
     "🤲 May Allah accept all our prayers and ibadah",
-    "🚪 Please keep main entrances clear for emergency access",
-    "💳 Support mosque maintenance & expansion. Scan QR at main entrance."
+    "Contact Us +94 769383982"
   ],
   specialPrayers: {
     jummah: {

@@ -26,13 +26,18 @@ import { fetchLiveWeather, WeatherData } from '@/lib/weather/weatherEngine';
 export const TVDisplay: React.FC = () => {
   const [settings, setSettings] = useState<TVSettings>(DEFAULT_SETTINGS);
   const [showSplash, setShowSplash] = useState(true);
-  
-  // Instant synchronous initializers to prevent hydration stuck screens
+  const [mounted, setMounted] = useState(false);
+
+  // Client-side mount indicator to prevent React SSR Hydration Mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const [time, setTime] = useState<Date>(() => new Date());
   const [prayerTimes, setPrayerTimes] = useState<PrayerTimes>(() => getTodayPrayerTimes());
   const [prayerState, setPrayerState] = useState<PrayerState>(() => resolvePrayerState(getTodayPrayerTimes(), new Date()));
   const [hijriDateStr, setHijriDateStr] = useState<string>(() => getFormattedHijriDate(new Date()));
-  
+
   const [dismissedAzan, setDismissedAzan] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
   const [showAdminMenu, setShowAdminMenu] = useState(false);
@@ -160,7 +165,7 @@ export const TVDisplay: React.FC = () => {
   const currentSlide = slidesList[slideIndex] || slidesList[0];
   const announcementsStr = settings.announcements && settings.announcements.length > 0
     ? settings.announcements.join(' • ')
-    : "🕌 Welcome to BIN FAIZAL'S SMART TV";
+    : "📢 Welcome to BIN FAIZAL'S Mosque Smart TV • Please turn off or silence your mobile phones inside the prayer hall. • 🤲 May Allah accept all our prayers and ibadah • Contact Us +94 769383982";
 
   return (
     <>
@@ -200,39 +205,16 @@ export const TVDisplay: React.FC = () => {
             </div>
           </div>
 
-          {/* Permanent Contact Information Display */}
-          <div className="flex items-center gap-5 bg-slate-900/80 border border-white/10 px-5 py-2 rounded-xl backdrop-blur-md">
-            <div className="flex items-center gap-2.5">
-              <span className="text-xl text-amber-400">📞</span>
-              <div>
-                <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-bold">Contact</span>
-                <span className="text-sm font-black text-amber-300 font-mono tracking-wide">
-                  {settings.contact.phone}
-                </span>
-              </div>
-            </div>
-
-            {settings.contact.whatsapp && settings.contact.whatsapp !== settings.contact.phone && (
-              <div className="hidden lg:flex items-center gap-2 border-l border-slate-700/80 pl-4">
-                <span className="text-lg text-emerald-400">📱</span>
-                <div>
-                  <span className="text-[10px] text-slate-400 uppercase tracking-widest block font-bold">WhatsApp</span>
-                  <span className="text-xs font-mono font-bold text-slate-200">{settings.contact.whatsapp}</span>
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Live Weather Widget */}
           {weatherData && (
-            <div className="hidden xl:flex items-center gap-3 bg-slate-900/80 border border-amber-500/20 px-4 py-2 rounded-xl backdrop-blur-md">
+            <div className="flex items-center gap-3 bg-slate-900/80 border border-amber-500/20 px-5 py-2.5 rounded-xl backdrop-blur-md">
               <span className="text-3xl">{weatherData.icon}</span>
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-base font-black text-white">{weatherData.tempC}°C</span>
                   <span className="text-xs font-bold text-amber-400">{weatherData.condition}</span>
                 </div>
-                <div className="text-[10px] text-slate-400 flex items-center gap-2 font-medium">
+                <div className="text-[10px] text-slate-400 flex items-center gap-2.5 font-medium">
                   <span>💧 {weatherData.humidity}%</span>
                   <span>💨 {weatherData.windSpeedKmH} km/h</span>
                   <span>🌅 {weatherData.sunrise}</span>
@@ -241,18 +223,22 @@ export const TVDisplay: React.FC = () => {
             </div>
           )}
 
-          {/* Live Clock & Dates */}
+          {/* Live Clock & Dates with Hydration Safety */}
           <div className="text-right flex items-center gap-6">
             <div className="text-4xl md:text-5xl font-black font-mono tracking-tight text-white drop-shadow-lg">
-              {time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
+              {mounted
+                ? time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })
+                : '--:--:-- AM'}
             </div>
             <div className="h-10 w-px bg-slate-700/60" />
             <div className="text-right">
               <div className="text-xs md:text-sm font-bold text-slate-200 uppercase tracking-wide">
-                {time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                {mounted
+                  ? time.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+                  : '---'}
               </div>
               <div className="text-sm md:text-base font-arabic font-bold text-amber-300 mt-0.5">
-                {hijriDateStr}
+                {mounted ? hijriDateStr : '---'}
               </div>
             </div>
           </div>

@@ -13,6 +13,11 @@ export default function PublicHomePage() {
   const [times, setTimes] = useState<PrayerTimes | null>(null);
   const [prayerState, setPrayerState] = useState<PrayerState | null>(null);
   const [hijriDateStr, setHijriDateStr] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const initSchedule = async () => {
@@ -107,7 +112,7 @@ export default function PublicHomePage() {
                   <div>
                     <span className="text-teal-300/80 block uppercase">Gregorian Date</span>
                     <span className="font-bold text-white text-sm">
-                      {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {mounted ? new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '---'}
                     </span>
                   </div>
                   <div className="text-right">
