@@ -61,10 +61,10 @@ export default function PublicHomePage() {
               </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-black text-amber-400 tracking-wide uppercase drop-shadow">
-                  BIN FAIZAL&apos;S MOSQUE
+                  BIN FAIZAL&apos;S
                 </h1>
                 <p className="text-xs text-emerald-400 font-bold uppercase tracking-wider">
-                  Smart Display & Community PWA
+                  Mosque Services • Smart TV & Community PWA
                 </p>
               </div>
             </div>
@@ -74,7 +74,7 @@ export default function PublicHomePage() {
                 href="/tv"
                 className="px-4 py-2.5 rounded-xl bg-emerald-800/80 hover:bg-emerald-700 text-emerald-100 text-xs font-bold border border-emerald-500/40 transition-all shadow-lg flex items-center gap-2"
               >
-                <span>📺</span> Open Smart TV Kiosk
+                <span>📺</span> Launch BIN FAIZAL&apos;S SMART TV
               </Link>
               <Link
                 href="/admin"
@@ -143,8 +143,8 @@ export default function PublicHomePage() {
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {[
-                  { name: 'Subah / Fajr', azan: times.fajr, iqamah: '+15 mins' },
-                  { name: 'Sunrise', azan: times.sunrise, iqamah: '-' },
+                  { name: 'Subah / Fajr', azan: times.fajr, iqamah: '+30 mins' },
+                  { name: 'Sunrise'},
                   { name: 'Luhar / Dhuhr', azan: times.dhuhr, iqamah: '+15 mins' },
                   { name: 'Asr', azan: times.asr, iqamah: '+15 mins' },
                   { name: 'Magrib / Maghrib', azan: times.maghrib, iqamah: '+15 mins' },
@@ -164,10 +164,10 @@ export default function PublicHomePage() {
                         {item.name}
                       </div>
                       <div className={`text-2xl sm:text-3xl font-black font-mono my-2 ${isActive ? 'text-amber-400 drop-shadow' : 'text-slate-100'}`}>
-                        {formatTo12Hour(item.azan)}
+                        {item.azan ? formatTo12Hour(item.azan) : '-'}
                       </div>
                       <div className="text-xs text-slate-400 font-semibold border-t border-white/10 pt-2">
-                        Iqamah: {item.iqamah}
+                        Iqamah: {item.iqamah || '-'}
                       </div>
                     </div>
                   );

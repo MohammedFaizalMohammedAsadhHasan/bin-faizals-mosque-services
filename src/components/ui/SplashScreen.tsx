@@ -65,7 +65,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
           BIN FAIZAL&apos;S
         </h1>
         <p className="text-emerald-400 text-sm md:text-base font-bold tracking-widest uppercase mt-2">
-          Mosque Services • Smart Kiosk & PWA
+          Mosque Services • Smart TV
         </p>
 
         {/* Loading Progress Bar */}
