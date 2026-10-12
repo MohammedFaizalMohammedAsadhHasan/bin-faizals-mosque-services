@@ -553,31 +553,6 @@ export const TVDisplay: React.FC = () => {
               <span>{announcementsStr}</span>
             </div>
           </div>
-
-          {/* Permanent Contact Information Bar */}
-          <div className="hidden lg:flex items-center gap-5 text-xs text-slate-300 font-semibold pl-6 ml-6 border-l border-slate-700/80 shrink-0">
-            {settings.contact.phone && (
-              <span className="flex items-center gap-1.5">
-                <span className="text-sky-400">📞</span>
-                <span className="font-mono text-slate-200">{settings.contact.phone}</span>
-              </span>
-            )}
-            {settings.contact.website && (
-              <span className="flex items-center gap-1.5">
-                <span className="text-sky-400">🌐</span>
-                <span className="text-slate-200">{settings.contact.website}</span>
-              </span>
-            )}
-            {/* Active Font Theme Pill Badge */}
-            <span
-              onClick={() => setFontThemeIndex((prev) => (prev + 1) % FONT_THEMES.length)}
-              className="cursor-pointer px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border border-white/20 bg-slate-900/80 transition-all hover:scale-105"
-              title="Click to cycle font color immediately"
-              style={{ color: activeFontTheme.previewColor }}
-            >
-              🎨 {activeFontTheme.name}
-            </span>
-          </div>
         </footer>
 
         {/* Silent Phone Alert Overlay Screen */}
