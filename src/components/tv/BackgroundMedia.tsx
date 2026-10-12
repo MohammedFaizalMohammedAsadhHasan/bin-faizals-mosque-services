@@ -13,8 +13,9 @@ export const BackgroundMedia: React.FC<BackgroundMediaProps> = ({ settings }) =>
   const slides = settings.slides && settings.slides.length > 0
     ? settings.slides
     : [
-        "https://images.unsplash.com/photo-1542816417-0983cbe82752?q=80&w=1920&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1564769625905-50e93615e769?q=80&w=1920&auto=format&fit=crop"
+        "/images/royal-mosque-1.jpg",
+        "/images/royal-mosque-2.jpg",
+        "/images/royal-mosque-3.jpg"
       ];
 
   useEffect(() => {
@@ -67,10 +68,10 @@ export const BackgroundMedia: React.FC<BackgroundMediaProps> = ({ settings }) =>
         style={{ opacity: overlayOpacityDecimal }}
       />
 
-      {/* Decorative Radial Vignette & Gold Soft Ambient Glows */}
+      {/* Decorative Radial Vignette & Royal Blue Soft Ambient Glows */}
       <div className="absolute inset-0 bg-radial-vignette pointer-events-none" />
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-emerald-600/10 rounded-full blur-[160px] pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-sky-500/10 rounded-full blur-[160px] pointer-events-none" />
     </div>
   );
 };

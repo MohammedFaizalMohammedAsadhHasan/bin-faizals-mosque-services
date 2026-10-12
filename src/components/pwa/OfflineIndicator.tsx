@@ -25,8 +25,8 @@ export const OfflineIndicator: React.FC = () => {
   if (!isOffline) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 bg-amber-950/90 border border-amber-500/40 text-amber-200 px-4 py-2.5 rounded-xl shadow-2xl backdrop-blur-md text-xs font-bold animate-pulse">
-      <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+    <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 bg-blue-950/90 border border-blue-500/40 text-blue-200 px-4 py-2.5 rounded-xl shadow-2xl backdrop-blur-md text-xs font-bold animate-pulse">
+      <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" />
       <span>Offline Mode Active • Using Cached Prayer Schedules</span>
     </div>
   );

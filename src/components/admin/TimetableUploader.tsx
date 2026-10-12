@@ -74,7 +74,7 @@ export const TimetableUploader: React.FC = () => {
         <a
           href="/sample-annual-timetable.csv"
           download
-          className="text-xs text-amber-400 hover:underline font-bold uppercase"
+          className="text-xs text-sky-400 hover:underline font-bold uppercase"
         >
           📥 CSV Template
         </a>

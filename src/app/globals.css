@@ -41,10 +41,10 @@ body:has(.tv-container) {
 /* Luxury Islamic Mosque Background & Glow Effects */
 .tv-container {
   background: 
-    radial-gradient(circle at 50% -10%, rgba(13, 148, 136, 0.25) 0%, transparent 50%),
-    radial-gradient(circle at 10% 90%, rgba(6, 78, 59, 0.3) 0%, transparent 45%),
-    radial-gradient(circle at 90% 80%, rgba(217, 119, 6, 0.15) 0%, transparent 40%),
-    linear-gradient(180deg, #042f2e 0%, #020617 65%, #01040a 100%);
+    radial-gradient(circle at 50% -10%, rgba(14, 165, 233, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 10% 90%, rgba(30, 58, 138, 0.35) 0%, transparent 45%),
+    radial-gradient(circle at 90% 80%, rgba(37, 99, 235, 0.22) 0%, transparent 40%),
+    linear-gradient(180deg, #071732 0%, #020617 65%, #01040a 100%);
   height: 100vh;
   width: 100vw;
   position: relative;
@@ -72,34 +72,47 @@ body:has(.tv-container) {
 }
 
 .glass-card-inactive {
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.8) 0%, rgba(6, 78, 59, 0.3) 100%);
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.85) 0%, rgba(15, 33, 64, 0.45) 100%);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(20, 184, 166, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.2);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.1);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card-inactive:hover {
-  border-color: rgba(245, 158, 11, 0.5);
+  border-color: rgba(56, 189, 248, 0.55);
   transform: translateY(-2px);
 }
 
 .glass-card-active {
-  background: linear-gradient(135deg, rgba(217, 119, 6, 0.5) 0%, rgba(180, 83, 9, 0.3) 100%);
+  background: linear-gradient(135deg, rgba(29, 78, 216, 0.55) 0%, rgba(14, 165, 233, 0.3) 100%);
   backdrop-filter: blur(28px);
-  border: 2.5px solid #fbbf24;
-  box-shadow: 0 0 45px rgba(245, 158, 11, 0.55), inset 0 0 20px rgba(251, 191, 36, 0.3);
+  border: 2.5px solid #38bdf8;
+  box-shadow: 0 0 45px rgba(56, 189, 248, 0.55), inset 0 0 20px rgba(125, 211, 252, 0.3);
 }
 
 .glass-card-hero {
-  background: linear-gradient(135deg, rgba(13, 148, 136, 0.6) 0%, rgba(4, 47, 46, 0.95) 100%);
+  background: linear-gradient(135deg, rgba(29, 78, 216, 0.5) 0%, rgba(11, 25, 44, 0.95) 100%);
   backdrop-filter: blur(28px);
-  border: 1.5px solid rgba(45, 212, 191, 0.5);
-  box-shadow: 0 20px 50px rgba(4, 47, 46, 0.7);
+  border: 1.5px solid rgba(56, 189, 248, 0.5);
+  box-shadow: 0 20px 50px rgba(6, 13, 31, 0.8), 0 0 35px rgba(37, 99, 235, 0.25);
 }
 
-/* Marquee News Ticker */
+.glass-card-gold,
+.glass-card-royal {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+  backdrop-filter: blur(28px);
+  border: 2px solid rgba(56, 189, 248, 0.8);
+  box-shadow: 0 0 45px rgba(37, 99, 235, 0.5), inset 0 0 25px rgba(56, 189, 248, 0.25);
+}
+
+/* Marquee News Ticker - Silky Smooth CSS Animation */
 @keyframes ticker {
+  0% { transform: translate3d(0%, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes marquee-scroll {
   0% { transform: translate3d(100%, 0, 0); }
   100% { transform: translate3d(-100%, 0, 0); }
 }
@@ -107,21 +120,35 @@ body:has(.tv-container) {
 .animate-ticker {
   display: inline-block;
   white-space: nowrap;
-  animation: ticker 38s linear infinite;
+  animation: ticker 32s linear infinite;
+  will-change: transform;
 }
 
-/* Glowing Gold Pulse Animation */
-@keyframes gold-pulse {
+.animate-marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee-scroll 32s linear infinite;
+  will-change: transform;
+}
+
+.animate-ticker:hover,
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Glowing Royal Sapphire Pulse Animation */
+@keyframes royal-pulse {
   0%, 100% { 
-    border-color: #fbbf24; 
-    box-shadow: 0 0 30px rgba(245, 158, 11, 0.5), inset 0 0 15px rgba(251, 191, 36, 0.25);
+    border-color: #38bdf8; 
+    box-shadow: 0 0 30px rgba(56, 189, 248, 0.55), inset 0 0 15px rgba(125, 211, 252, 0.3);
   }
   50% { 
-    border-color: #f59e0b; 
-    box-shadow: 0 0 55px rgba(245, 158, 11, 0.85), inset 0 0 30px rgba(251, 191, 36, 0.45);
+    border-color: #60a5fa; 
+    box-shadow: 0 0 55px rgba(37, 99, 235, 0.85), inset 0 0 30px rgba(147, 197, 253, 0.45);
   }
 }
 
+.pulse-royal,
 .pulse-gold {
-  animation: gold-pulse 2.5s infinite ease-in-out;
+  animation: royal-pulse 2.5s infinite ease-in-out;
 }

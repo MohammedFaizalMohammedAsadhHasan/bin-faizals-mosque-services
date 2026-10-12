@@ -6,7 +6,8 @@ import {
   getTVSettings,
   saveTVSettings,
   TVSettings,
-  DEFAULT_SETTINGS
+  DEFAULT_SETTINGS,
+  SRI_LANKA_ZONES
 } from '@/lib/settings/settingsManager';
 import { playAzanAudio, stopAzanAudio } from '@/lib/audio/azanAudioEngine';
 import { fetchLiveWeather, WeatherData } from '@/lib/weather/weatherEngine';
@@ -85,10 +86,10 @@ export default function AdminPage() {
           <div className="flex items-center gap-3">
             <span className="text-3xl">🕌</span>
             <div>
-              <h1 className="text-3xl font-black text-amber-400 tracking-wide">
+              <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-200 via-sky-300 to-blue-200 tracking-wide">
                 MOSQUE ADMIN CONSOLE
               </h1>
-              <p className="text-xs font-bold text-emerald-400 tracking-widest uppercase">
+              <p className="text-xs font-bold text-sky-400 tracking-widest uppercase">
                 BIN FAIZAL&apos;S SMART TV MANAGEMENT SUITE
               </p>
             </div>
@@ -97,13 +98,13 @@ export default function AdminPage() {
 
         <div className="flex items-center gap-3">
           {savedSuccess && (
-            <span className="px-4 py-2 bg-emerald-500/20 border border-emerald-500 text-emerald-300 rounded-xl text-xs font-bold animate-pulse">
+            <span className="px-4 py-2 bg-blue-500/20 border border-blue-500 text-sky-300 rounded-xl text-xs font-bold animate-pulse">
               ✓ Settings Broadcast Live to TV!
             </span>
           )}
           <button
             onClick={handleSave}
-            className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-sm transition-all shadow-lg shadow-amber-500/30 uppercase tracking-wider"
+            className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-black rounded-xl text-sm transition-all shadow-lg shadow-blue-600/30 uppercase tracking-wider"
           >
             Save All Changes
           </button>
@@ -132,7 +133,7 @@ export default function AdminPage() {
             onClick={() => setActiveTab(tab.id as any)}
             className={`px-4 py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition-all flex items-center gap-2 ${
               activeTab === tab.id
-                ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-400/20 font-bold'
+                ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md shadow-blue-500/20 font-bold'
                 : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
             }`}
           >
@@ -147,18 +148,58 @@ export default function AdminPage() {
         {/* TAB 1: General & Contact Info */}
         {activeTab === 'general' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-amber-400 mb-4 border-b border-slate-800 pb-2">
+            <h2 className="text-xl font-bold text-sky-400 mb-4 border-b border-slate-800 pb-2">
               General Branding & Permanent Contact Bar
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-2">🌐 System Display Language</label>
+                <select
+                  value={settings.language || 'en'}
+                  onChange={(e) => setSettings({ ...settings, language: e.target.value as any })}
+                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-sky-300 text-sm font-bold focus:border-sky-400 focus:outline-none cursor-pointer mb-3"
+                >
+                  <option value="en">🇬🇧 English</option>
+                  <option value="ar">🇸🇦 العربية (Arabic)</option>
+                  <option value="ta">🇱🇰 தமிழ் (Tamil)</option>
+                  <option value="si">🇱🇰 සිංහල (Sinhala)</option>
+                </select>
+
+                <div className="flex flex-col gap-2 pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">
+                    <input
+                      type="checkbox"
+                      checked={settings.autoCycleLanguages ?? false}
+                      onChange={(e) => setSettings({ ...settings, autoCycleLanguages: e.target.checked })}
+                      className="w-4 h-4 accent-sky-400 cursor-pointer"
+                    />
+                    <span className="text-xs font-semibold text-slate-200">
+                      🔄 Auto-cycle all 4 languages on TV (every 15s)
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">
+                    <input
+                      type="checkbox"
+                      checked={settings.phoneSilentAlertEnabled ?? true}
+                      onChange={(e) => setSettings({ ...settings, phoneSilentAlertEnabled: e.target.checked })}
+                      className="w-4 h-4 accent-sky-400 cursor-pointer"
+                    />
+                    <span className="text-xs font-semibold text-slate-200">
+                      📵 Show &apos;Silence Mobile Phones&apos; alert at Iqamah time
+                    </span>
+                  </label>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Mosque Name</label>
                 <input
                   type="text"
                   value={settings.mosqueName}
                   onChange={(e) => setSettings({ ...settings, mosqueName: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm font-semibold focus:border-amber-400 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm font-semibold focus:border-sky-400 focus:outline-none"
                 />
               </div>
 
@@ -168,7 +209,7 @@ export default function AdminPage() {
                   type="text"
                   value={settings.displayName}
                   onChange={(e) => setSettings({ ...settings, displayName: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm font-semibold focus:border-amber-400 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm font-semibold focus:border-sky-400 focus:outline-none"
                 />
               </div>
 
@@ -181,7 +222,7 @@ export default function AdminPage() {
                     ...settings,
                     contact: { ...settings.contact, phone: e.target.value }
                   })}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-amber-300 font-mono font-bold text-sm focus:border-amber-400 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-sky-300 font-mono font-bold text-sm focus:border-sky-400 focus:outline-none"
                 />
               </div>
 
@@ -194,7 +235,7 @@ export default function AdminPage() {
                     ...settings,
                     contact: { ...settings.contact, whatsapp: e.target.value }
                   })}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 font-mono text-sm focus:border-amber-400 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 font-mono text-sm focus:border-sky-400 focus:outline-none"
                 />
               </div>
 
@@ -207,7 +248,7 @@ export default function AdminPage() {
                     ...settings,
                     contact: { ...settings.contact, email: e.target.value }
                   })}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm focus:border-amber-400 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm focus:border-sky-400 focus:outline-none"
                 />
               </div>
 
@@ -220,7 +261,7 @@ export default function AdminPage() {
                     ...settings,
                     contact: { ...settings.contact, website: e.target.value }
                   })}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm focus:border-amber-400 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm focus:border-sky-400 focus:outline-none"
                 />
               </div>
             </div>
@@ -229,8 +270,122 @@ export default function AdminPage() {
 
         {/* TAB 2: Prayer & Iqamah Times */}
         {activeTab === 'prayer' && (
-          <div className="space-y-6">
-            <h2 className="text-xl font-bold text-amber-400 mb-2">
+          <div className="space-y-8">
+            {/* Sri Lanka Zone & Display Options */}
+            <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-6">
+              <h2 className="text-xl font-bold text-sky-400 border-b border-slate-800 pb-2">
+                🇱🇰 Sri Lanka Prayer Zone & Calculation Mode (MDisplay Live Standard)
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 uppercase mb-2">
+                    Select Sri Lanka Prayer Zone (13 Zones)
+                  </label>
+                  <select
+                    value={settings.selectedZoneId || 'ZONE1'}
+                    onChange={(e) => setSettings({ ...settings, selectedZoneId: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-sky-300 font-bold text-sm focus:border-sky-400 focus:outline-none cursor-pointer"
+                  >
+                    {SRI_LANKA_ZONES.map((zone) => (
+                      <option key={zone.id} value={zone.id}>
+                        {zone.label}
+                      </option>
+                    ))}
+                  </select>
+                  {(() => {
+                    const activeZone = SRI_LANKA_ZONES.find((z) => z.id === (settings.selectedZoneId || 'ZONE1'));
+                    if (!activeZone) return null;
+                    return (
+                      <div className="mt-2 text-xs text-slate-400 bg-slate-900/60 p-3 rounded-xl border border-slate-800/80">
+                        <span className="font-bold text-slate-300">Coverage: </span>{activeZone.districts}
+                        <div className="mt-1.5 flex flex-wrap gap-2 text-[11px] text-sky-300 font-mono">
+                          <span>Fajr: {activeZone.adjustmentMinutes.fajr >= 0 ? `+${activeZone.adjustmentMinutes.fajr}` : activeZone.adjustmentMinutes.fajr}m</span>
+                          <span>• Sunrise: {activeZone.adjustmentMinutes.sunrise >= 0 ? `+${activeZone.adjustmentMinutes.sunrise}` : activeZone.adjustmentMinutes.sunrise}m</span>
+                          <span>• Luhar: {activeZone.adjustmentMinutes.dhuhr >= 0 ? `+${activeZone.adjustmentMinutes.dhuhr}` : activeZone.adjustmentMinutes.dhuhr}m</span>
+                          <span>• Asr: {activeZone.adjustmentMinutes.asr >= 0 ? `+${activeZone.adjustmentMinutes.asr}` : activeZone.adjustmentMinutes.asr}m</span>
+                          <span>• Magrib: {activeZone.adjustmentMinutes.maghrib >= 0 ? `+${activeZone.adjustmentMinutes.maghrib}` : activeZone.adjustmentMinutes.maghrib}m</span>
+                          <span>• Isha: {activeZone.adjustmentMinutes.isha >= 0 ? `+${activeZone.adjustmentMinutes.isha}` : activeZone.adjustmentMinutes.isha}m</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                <div className="flex flex-col justify-center space-y-3">
+                  <label className="flex items-center gap-3 cursor-pointer bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                    <input
+                      type="checkbox"
+                      checked={settings.time24Format ?? false}
+                      onChange={(e) => setSettings({ ...settings, time24Format: e.target.checked })}
+                      className="w-4 h-4 accent-sky-400 cursor-pointer"
+                    />
+                    <span className="text-xs font-bold text-slate-200">
+                      ⏱ 24-Hour Military Time Format (e.g. 13:15 instead of 01:15 PM)
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-3 cursor-pointer bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                    <input
+                      type="checkbox"
+                      checked={settings.showSunrise ?? true}
+                      onChange={(e) => setSettings({ ...settings, showSunrise: e.target.checked })}
+                      className="w-4 h-4 accent-sky-400 cursor-pointer"
+                    />
+                    <span className="text-xs font-bold text-slate-200">
+                      🌅 Display Sunrise Time on Timetable
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-3 cursor-pointer bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                    <input
+                      type="checkbox"
+                      checked={settings.tarawihEnabled ?? false}
+                      onChange={(e) => setSettings({ ...settings, tarawihEnabled: e.target.checked })}
+                      className="w-4 h-4 accent-sky-400 cursor-pointer"
+                    />
+                    <span className="text-xs font-bold text-slate-200">
+                      🌙 Display Tarawih Prayer (Ramadan Mode)
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Per-Prayer Fine Tuning Adjustment Minutes (+/-) */}
+              <div className="pt-4 border-t border-slate-800">
+                <h3 className="text-sm font-bold text-slate-200 uppercase mb-2">
+                  ⚙️ Per-Prayer Fine-Tuning Adjustment (Minutes +/-)
+                </h3>
+                <p className="text-xs text-slate-400 mb-4">
+                  Add or subtract minutes from standard astronomical times for your specific masjid.
+                </p>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                  {(['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'] as const).map((pKey) => (
+                    <div key={pKey} className="bg-slate-900 p-3 rounded-xl border border-slate-800 text-center">
+                      <label className="block text-[11px] font-black uppercase text-sky-400 mb-1">
+                        {pKey}
+                      </label>
+                      <input
+                        type="number"
+                        value={settings.timeAdjustmentMinutes?.[pKey] ?? 0}
+                        onChange={(e) => setSettings({
+                          ...settings,
+                          timeAdjustmentMinutes: {
+                            ...(settings.timeAdjustmentMinutes || { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 }),
+                            [pKey]: parseInt(e.target.value) || 0,
+                          }
+                        })}
+                        className="w-full text-center px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-sky-300 font-mono font-bold text-sm focus:border-sky-400 focus:outline-none"
+                      />
+                      <span className="text-[10px] text-slate-400 mt-1 block">minutes</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <h2 className="text-xl font-bold text-sky-400 mb-2">
               Iqamah Calculation Offsets & Azan Overrides
             </h2>
             <p className="text-xs text-slate-400 mb-6">
@@ -240,7 +395,7 @@ export default function AdminPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {(['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const).map((key) => (
                 <div key={key} className="bg-slate-950 p-5 rounded-2xl border border-slate-800">
-                  <span className="text-xs font-black uppercase text-amber-400 block mb-3">
+                  <span className="text-xs font-black uppercase text-sky-300 block mb-3">
                     {key} Prayer
                   </span>
 
@@ -258,7 +413,7 @@ export default function AdminPage() {
                           [key]: parseInt(e.target.value) || 0
                         }
                       })}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-emerald-400 font-mono font-bold text-sm focus:outline-none focus:border-emerald-400"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sky-300 font-mono font-bold text-sm focus:outline-none focus:border-sky-400"
                     />
                   </div>
 
@@ -277,7 +432,7 @@ export default function AdminPage() {
                           [key]: e.target.value
                         }
                       })}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs focus:outline-none focus:border-amber-400"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs focus:outline-none focus:border-sky-400"
                     />
                   </div>
                 </div>
@@ -289,7 +444,7 @@ export default function AdminPage() {
         {/* TAB 3: Azan Audio */}
         {activeTab === 'audio' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-amber-400 mb-2">
+            <h2 className="text-xl font-bold text-sky-400 mb-2">
               Full Azan Audio Settings & MP3 Assignments
             </h2>
 
@@ -302,7 +457,7 @@ export default function AdminPage() {
                   ...settings,
                   azanAudio: { ...settings.azanAudio, enabled: e.target.checked }
                 })}
-                className="w-5 h-5 accent-amber-400 cursor-pointer"
+                className="w-5 h-5 accent-sky-400 cursor-pointer"
               />
             </div>
 
@@ -319,11 +474,11 @@ export default function AdminPage() {
                       ...settings,
                       azanAudio: { ...settings.azanAudio, fajrAudio: e.target.value }
                     })}
-                    className="flex-1 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs font-mono focus:border-amber-400 focus:outline-none"
+                    className="flex-1 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs font-mono focus:border-sky-400 focus:outline-none"
                   />
                   <button
                     onClick={() => handleTestAudio(settings.azanAudio.fajrAudio)}
-                    className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl"
+                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/30"
                   >
                     ▶ Test Audio
                   </button>
@@ -354,11 +509,11 @@ export default function AdminPage() {
                         ishaAudio: e.target.value,
                       }
                     })}
-                    className="flex-1 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs font-mono focus:border-amber-400 focus:outline-none"
+                    className="flex-1 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs font-mono focus:border-sky-400 focus:outline-none"
                   />
                   <button
                     onClick={() => handleTestAudio(settings.azanAudio.dhuhrAudio)}
-                    className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl"
+                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/30"
                   >
                     ▶ Test Audio
                   </button>
@@ -377,7 +532,7 @@ export default function AdminPage() {
         {/* TAB 4: Weather */}
         {activeTab === 'weather' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-amber-400 mb-2">
+            <h2 className="text-xl font-bold text-sky-400 mb-2">
               Live Weather Detection & Coordinates
             </h2>
 
@@ -391,7 +546,7 @@ export default function AdminPage() {
                     ...settings,
                     weather: { ...settings.weather, city: e.target.value }
                   })}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm focus:border-amber-400 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm focus:border-sky-400 focus:outline-none"
                 />
               </div>
 
@@ -405,7 +560,7 @@ export default function AdminPage() {
                     ...settings,
                     weather: { ...settings.weather, latitude: parseFloat(e.target.value) || 0 }
                   })}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm focus:border-amber-400 focus:outline-none font-mono"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm focus:border-sky-400 focus:outline-none font-mono"
                 />
               </div>
 
@@ -419,7 +574,7 @@ export default function AdminPage() {
                     ...settings,
                     weather: { ...settings.weather, longitude: parseFloat(e.target.value) || 0 }
                   })}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm focus:border-amber-400 focus:outline-none font-mono"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm focus:border-sky-400 focus:outline-none font-mono"
                 />
               </div>
             </div>
@@ -427,15 +582,15 @@ export default function AdminPage() {
             <div>
               <button
                 onClick={handleTestWeatherFetch}
-                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all"
+                className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-bold text-xs rounded-xl transition-all shadow-md shadow-blue-600/30"
               >
                 🔄 Test Fetch Weather API Now
               </button>
             </div>
 
             {testWeather && (
-              <div className="p-4 bg-slate-950 rounded-2xl border border-emerald-500/40 text-xs font-mono space-y-1">
-                <div className="text-emerald-400 font-bold">Weather API Response OK:</div>
+              <div className="p-4 bg-slate-950 rounded-2xl border border-sky-500/40 text-xs font-mono space-y-1">
+                <div className="text-sky-400 font-bold">Weather API Response OK:</div>
                 <div>Condition: {testWeather.icon} {testWeather.condition}</div>
                 <div>Temperature: {testWeather.tempC}°C | Humidity: {testWeather.humidity}%</div>
                 <div>Wind Speed: {testWeather.windSpeedKmH} km/h</div>
@@ -448,7 +603,7 @@ export default function AdminPage() {
         {/* TAB 5: Background */}
         {activeTab === 'background' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-amber-400 mb-2">
+            <h2 className="text-xl font-bold text-sky-400 mb-2">
               Background System (Slideshow & Video Streaming)
             </h2>
 
@@ -462,7 +617,7 @@ export default function AdminPage() {
                   })}
                   className={`px-5 py-2.5 rounded-xl font-bold text-xs uppercase transition-all ${
                     settings.background.type === type
-                      ? 'bg-amber-400 text-slate-950 font-black'
+                      ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white font-black shadow-md shadow-blue-500/30'
                       : 'bg-slate-950 text-slate-400 border border-slate-800'
                   }`}
                 >
@@ -484,7 +639,7 @@ export default function AdminPage() {
                     ...settings,
                     background: { ...settings.background, videoUrl: e.target.value }
                   })}
-                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs font-mono focus:border-amber-400 focus:outline-none"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs font-mono focus:border-sky-400 focus:outline-none"
                 />
               </div>
             ) : (
@@ -503,7 +658,7 @@ export default function AdminPage() {
                   />
                   <button
                     onClick={addSlideUrl}
-                    className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl"
+                    className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/30"
                   >
                     + Add Wallpaper
                   </button>
@@ -539,7 +694,7 @@ export default function AdminPage() {
                     ...settings,
                     background: { ...settings.background, overlayOpacity: parseInt(e.target.value) || 50 }
                   })}
-                  className="w-full accent-amber-400 cursor-pointer"
+                  className="w-full accent-sky-400 cursor-pointer"
                 />
               </div>
 
@@ -566,7 +721,7 @@ export default function AdminPage() {
         {/* TAB 6: Announcements Ticker */}
         {activeTab === 'announcements' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-amber-400 mb-2">
+            <h2 className="text-xl font-bold text-sky-400 mb-2">
               Scrolling Bottom Announcement Ticker
             </h2>
 
@@ -576,11 +731,11 @@ export default function AdminPage() {
                 placeholder="Enter new announcement text..."
                 value={newAnnouncement}
                 onChange={(e) => setNewAnnouncement(e.target.value)}
-                className="flex-1 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm focus:border-amber-400 focus:outline-none"
+                className="flex-1 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm focus:border-sky-400 focus:outline-none"
               />
               <button
                 onClick={addAnnouncement}
-                className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl uppercase"
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-black text-xs rounded-xl uppercase shadow-md shadow-blue-600/30"
               >
                 + Add Announcement
               </button>
@@ -605,7 +760,7 @@ export default function AdminPage() {
         {/* TAB 7: Special Prayers */}
         {activeTab === 'special' && (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-amber-400 mb-2">
+            <h2 className="text-xl font-bold text-sky-400 mb-2">
               Special Prayer Schedules (Jumu&apos;ah, Taraweeh, Eid)
             </h2>
 
@@ -613,7 +768,7 @@ export default function AdminPage() {
               {Object.entries(settings.specialPrayers).map(([key, item]) => (
                 <div key={key} className="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-base font-black text-amber-400 uppercase">{item.title}</span>
+                    <span className="text-base font-black text-sky-300 uppercase">{item.title}</span>
                     <label className="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer">
                       <span>Enable:</span>
                       <input
@@ -626,7 +781,7 @@ export default function AdminPage() {
                             [key]: { ...item, enabled: e.target.checked }
                           }
                         })}
-                        className="w-4 h-4 accent-amber-400 cursor-pointer"
+                        className="w-4 h-4 accent-sky-400 cursor-pointer"
                       />
                     </label>
                   </div>

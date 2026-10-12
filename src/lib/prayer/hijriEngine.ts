@@ -89,12 +89,57 @@ export function getHijriDate(date: Date = new Date(), dayOffset: number = 0): Hi
   };
 }
 
+const HIJRI_MONTHS_TA = [
+  'முஹர்ரம்',
+  'சஃபர்',
+  'ரபி உல் அவ்வல்',
+  'ரபி உல் ஆகிர்',
+  'ஜமா அத்துல் அவ்வல்',
+  'ஜமா அத்துல் ஆகிர்',
+  'ரஜப்',
+  'ஷஃபான்',
+  'ரமழான்',
+  'ஷவ்வால்',
+  'துல் கஃதா',
+  'துல் ஹிஜ்ஜா',
+];
+
+const HIJRI_MONTHS_SI = [
+  'මුහර්රම්',
+  'සෆර්',
+  'රබීඋල් අව්වල්',
+  'රබීඋල් ආඛිර්',
+  'ජමාදුල් අව්වල්',
+  'ජමාදුල් ආඛිර්',
+  'රජබ්',
+  'ශඅබාන්',
+  'රමළාන්',
+  'ශව්වාල්',
+  'දුල් කඃදා',
+  'දුල් හිජ්ජා',
+];
+
 /**
- * Returns formatted Hijri Date string in Arabic typography (e.g. ١٢ صَفَر ١٤٤٨ هـ)
+ * Returns formatted Hijri Date string localized according to current language
  */
-export function getFormattedHijriDate(date: Date = new Date(), dayOffset: number = 0): string {
+export function getFormattedHijriDate(date: Date = new Date(), dayOffset: number = 0, lang: string = 'ar'): string {
   const hijri = getHijriDate(date, dayOffset);
-  const arDay = toArabicDigits(hijri.day);
-  const arYear = toArabicDigits(hijri.year);
-  return `${arDay} ${hijri.monthNameAr} ${arYear} هـ`;
+  const norm = (lang || 'ar').toLowerCase();
+  const monthIdx = Math.max(0, Math.min(11, hijri.month - 1));
+
+  if (norm === 'ar') {
+    const arDay = toArabicDigits(hijri.day);
+    const arYear = toArabicDigits(hijri.year);
+    return `${arDay} ${hijri.monthNameAr} ${arYear} هـ`;
+  }
+
+  if (norm === 'ta') {
+    return `${hijri.day} ${HIJRI_MONTHS_TA[monthIdx]} ${hijri.year} ஹிஜ்ரி`;
+  }
+
+  if (norm === 'si') {
+    return `${hijri.day} ${HIJRI_MONTHS_SI[monthIdx]} ${hijri.year} හිජ්රි`;
+  }
+
+  return `${hijri.day} ${hijri.monthNameEn} ${hijri.year} AH`;
 }

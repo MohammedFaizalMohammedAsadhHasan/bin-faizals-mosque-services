@@ -46,6 +46,23 @@ export function formatTo12Hour(timeStr: string, includeAmPm: boolean = true): st
 }
 
 /**
+ * Adjusts a 24-hour time string (HH:mm) by minutes (+ or -)
+ */
+export function adjustTimeString(timeStr: string, minutesToAdd: number): string {
+  if (!timeStr || timeStr === '-' || !minutesToAdd) return timeStr;
+  const parts = timeStr.split(':');
+  if (parts.length < 2) return timeStr;
+  const [h, m] = parts.map(Number);
+  if (isNaN(h) || isNaN(m)) return timeStr;
+  let total = h * 60 + m + minutesToAdd;
+  while (total < 0) total += 1440;
+  total = total % 1440;
+  const newH = Math.floor(total / 60);
+  const newM = total % 60;
+  return `${newH.toString().padStart(2, '0')}:${newM.toString().padStart(2, '0')}`;
+}
+
+/**
  * Calculates time remaining in seconds until target time HH:mm
  */
 export function getSecondsUntil(targetTimeStr: string, now: Date = new Date()): number {

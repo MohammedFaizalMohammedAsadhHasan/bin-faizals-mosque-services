@@ -1,4 +1,4 @@
-'use client';
+import { LanguageCode } from '@/lib/i18n/i18n';
 
 export interface ContactInfo {
   phone: string;
@@ -83,7 +83,55 @@ export interface IslamicSlide {
   reference: string;
 }
 
+export interface SriLankaZone {
+  id: string;
+  name: string;
+  label: string;
+  districts: string;
+  adjustmentMinutes: {
+    fajr: number;
+    sunrise: number;
+    dhuhr: number;
+    asr: number;
+    maghrib: number;
+    isha: number;
+  };
+}
+
+export const SRI_LANKA_ZONES: SriLankaZone[] = [
+  { id: 'ZONE1', name: 'Zone 01', label: 'Zone 01: Colombo, Gampaha & Kalutara District', districts: 'Colombo, Gampaha, Kalutara', adjustmentMinutes: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 } },
+  { id: 'ZONE2', name: 'Zone 02', label: 'Zone 02: Jaffna & Nallur', districts: 'Jaffna, Nallur', adjustmentMinutes: { fajr: 2, sunrise: 1, dhuhr: 0, asr: 1, maghrib: 0, isha: 0 } },
+  { id: 'ZONE3', name: 'Zone 03', label: 'Zone 03: Mullaitivu, Kilinochchi & Vavuniya District', districts: 'Mullaitivu, Kilinochchi, Vavuniya', adjustmentMinutes: { fajr: 1, sunrise: 0, dhuhr: -1, asr: 0, maghrib: -1, isha: -1 } },
+  { id: 'ZONE4', name: 'Zone 04', label: 'Zone 04: Mannar & Puttalam District', districts: 'Mannar, Puttalam', adjustmentMinutes: { fajr: 1, sunrise: 1, dhuhr: 1, asr: 1, maghrib: 1, isha: 1 } },
+  { id: 'ZONE5', name: 'Zone 05', label: 'Zone 05: Anuradhapura & Polonnaruwa District', districts: 'Anuradhapura, Polonnaruwa', adjustmentMinutes: { fajr: 0, sunrise: -1, dhuhr: -1, asr: -1, maghrib: -2, isha: -2 } },
+  { id: 'ZONE6', name: 'Zone 06', label: 'Zone 06: Kurunegala District', districts: 'Kurunegala', adjustmentMinutes: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 } },
+  { id: 'ZONE7', name: 'Zone 07', label: 'Zone 07: Kandy, Matale & Nuwara Eliya District', districts: 'Kandy, Matale, Nuwara Eliya', adjustmentMinutes: { fajr: -1, sunrise: -2, dhuhr: -2, asr: -2, maghrib: -2, isha: -2 } },
+  { id: 'ZONE8', name: 'Zone 08', label: 'Zone 08: Batticaloa & Ampara District', districts: 'Batticaloa, Ampara', adjustmentMinutes: { fajr: -6, sunrise: -6, dhuhr: -6, asr: -6, maghrib: -6, isha: -6 } },
+  { id: 'ZONE9', name: 'Zone 09', label: 'Zone 09: Trincomalee District', districts: 'Trincomalee', adjustmentMinutes: { fajr: -4, sunrise: -4, dhuhr: -5, asr: -5, maghrib: -5, isha: -5 } },
+  { id: 'ZONE10', name: 'Zone 10', label: 'Zone 10: Badulla, Monaragala, Dehiattakandiya, Embilipitiya', districts: 'Badulla, Monaragala, Embilipitiya', adjustmentMinutes: { fajr: -3, sunrise: -3, dhuhr: -3, asr: -3, maghrib: -3, isha: -3 } },
+  { id: 'ZONE11', name: 'Zone 11', label: 'Zone 11: Ratnapura & Kegalle District', districts: 'Ratnapura, Kegalle', adjustmentMinutes: { fajr: 0, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 } },
+  { id: 'ZONE12', name: 'Zone 12', label: 'Zone 12: Galle & Matara District', districts: 'Galle, Matara', adjustmentMinutes: { fajr: 1, sunrise: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 } },
+  { id: 'ZONE13', name: 'Zone 13', label: 'Zone 13: Hambantota District', districts: 'Hambantota', adjustmentMinutes: { fajr: -2, sunrise: -2, dhuhr: -2, asr: -2, maghrib: -2, isha: -2 } },
+];
+
+export interface TimeAdjustmentMinutes {
+  fajr: number;
+  sunrise: number;
+  dhuhr: number;
+  asr: number;
+  maghrib: number;
+  isha: number;
+}
+
 export interface TVSettings {
+  language: LanguageCode;
+  autoCycleLanguages: boolean;
+  selectedZoneId: string;
+  timeAdjustmentMinutes: TimeAdjustmentMinutes;
+  time24Format: boolean;
+  showSunrise: boolean;
+  tarawihEnabled: boolean;
+  phoneSilentAlertEnabled: boolean;
   mosqueName: string;
   brandTitle: string;
   subtitle: string;
@@ -98,25 +146,42 @@ export interface TVSettings {
   announcements: string[];
   specialPrayers: SpecialPrayerSchedule;
   islamicContent: IslamicSlide[];
+  fontColorCycleSeconds?: number;
+  fontColorTheme?: string;
 }
 
 export const DEFAULT_SETTINGS: TVSettings = {
+  language: 'en',
+  autoCycleLanguages: false,
+  selectedZoneId: 'ZONE4', // Default: Zone 04: Mannar & Puttalam District
+  timeAdjustmentMinutes: {
+    fajr: 0,
+    sunrise: 0,
+    dhuhr: 0,
+    asr: 0,
+    maghrib: 0,
+    isha: 0,
+  },
+  time24Format: false,
+  showSunrise: true,
+  tarawihEnabled: false,
+  phoneSilentAlertEnabled: true,
   mosqueName: "MOHIDHEEN THAIKKA MOSQUE",
   brandTitle: "BIN FAIZAL'S",
   subtitle: "Mosque Services",
   displayName: "BIN FAIZAL'S SMART TV",
   contact: {
-    phone: "+94 76 938 3982",
-    whatsapp: "+94 76 938 3982",
-    email: "contact@binfaizal.org",
-    website: "www.binfaizal.org",
-    callText: "Call",
+    phone: "",
+    whatsapp: "",
+    email: "",
+    website: "",
+    callText: "",
   },
   iqamahOffsets: {
-    fajr: 30,
+    fajr: 20,
     dhuhr: 15,
     asr: 15,
-    maghrib: 15,
+    maghrib: 10,
     isha: 15,
   },
   customPrayerTimes: {},
@@ -131,29 +196,29 @@ export const DEFAULT_SETTINGS: TVSettings = {
     ishaAudio: "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3",
   },
   weather: {
-    city: "Colombo",
+    city: "Puttalam",
     autoDetect: true,
-    latitude: 6.9271,
-    longitude: 79.8612,
+    latitude: 8.0333,
+    longitude: 80.0167,
   },
   background: {
     type: 'slideshow',
     slides: [
-      "https://images.unsplash.com/photo-1542816417-0983cbe82752?q=80&w=1920&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1564769625905-50e93615e769?q=80&w=1920&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1591604466107-ec97de577aff?q=80&w=1920&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1519817650390-64a93db51149?q=80&w=1920&auto=format&fit=crop"
+      "/images/royal-mosque-1.jpg",
+      "/images/royal-mosque-2.jpg",
+      "/images/royal-mosque-3.jpg"
     ],
     videoUrl: "",
     slideIntervalSeconds: 12,
     blurPx: 0,
-    overlayOpacity: 55,
+    overlayOpacity: 40,
   },
+  fontColorCycleSeconds: 8,
+  fontColorTheme: 'royal-cycle',
   announcements: [
     "📢 Welcome to BIN FAIZAL'S Mosque Smart TV",
     "Please turn off or silence your mobile phones inside the prayer hall.",
-    "🤲 May Allah accept all our prayers and ibadah",
-    "Contact Us +94 769383982"
+    "🤲 May Allah accept all our prayers and ibadah"
   ],
   specialPrayers: {
     jummah: {
@@ -161,7 +226,7 @@ export const DEFAULT_SETTINGS: TVSettings = {
       title: "Jumu'ah Prayer",
       khutbahTime: "12:30 PM",
       prayerTime: "01:00 PM",
-      iqamahTime: "01:05 PM",
+      iqamahTime: "01:15 PM (+45 mins)",
       notes: "Please silence mobile phones & perform Sunnah prayers early."
     },
     taraweeh: {
