@@ -75,8 +75,8 @@ export function getHijriDate(date: Date = new Date(), dayOffset: number = 0): Hi
   const l2 = l1 - Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50) - Math.floor(j / 16) * Math.floor((15238 * j) / 43) + 29;
 
   const hijriMonth = Math.floor((24 * l2) / 709);
-  const hijriDay = l2 - Math.floor((709 * hijriMonth) / 24);
-  const hijriYear = 30 * n + j - 30;
+  const hijriDay = Math.floor(l2 - Math.floor((709 * hijriMonth) / 24));
+  const hijriYear = Math.floor(30 * n + j - 30);
 
   const monthIdx = Math.max(0, Math.min(11, hijriMonth - 1));
 

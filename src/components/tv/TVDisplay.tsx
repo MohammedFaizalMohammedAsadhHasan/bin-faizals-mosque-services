@@ -463,47 +463,43 @@ export const TVDisplay: React.FC = () => {
         {/* Top Header Bar */}
         <header className="glass-panel flex justify-between items-center px-4 sm:px-6 py-2 sm:py-2.5 rounded-2xl shrink-0 border border-blue-500/30 shadow-2xl relative z-10 gap-3">
           {/* Mosque Brand & Title */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500 via-sky-500 to-indigo-600 flex items-center justify-center font-bold text-white text-2xl shadow-lg shadow-blue-500/40 border border-sky-300 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-blue-500 via-sky-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xl sm:text-2xl shadow-lg shadow-blue-500/40 border border-sky-300 shrink-0">
               🕌
             </div>
-            <div>
-              <h1 className={`text-lg sm:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r ${activeFontTheme.brandTitle} uppercase drop-shadow-md transition-all duration-1000 leading-tight`}>
+            <div className="min-w-0">
+              <h1 className={`text-base sm:text-lg lg:text-xl xl:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r ${activeFontTheme.brandTitle} uppercase drop-shadow-md transition-all duration-1000 whitespace-nowrap leading-none truncate`}>
                 {settings.mosqueName}
               </h1>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className={`text-[10px] sm:text-xs font-black tracking-widest uppercase bg-blue-950/80 px-2 py-0.5 rounded-md border border-blue-500/30 ${activeFontTheme.accentText} transition-colors duration-1000`}>
+              <div className="mt-1 flex items-center">
+                <span className={`text-[10px] sm:text-xs font-black tracking-widest uppercase bg-blue-950/80 px-2 py-0.5 rounded-md border border-blue-500/30 ${activeFontTheme.accentText} transition-colors duration-1000 whitespace-nowrap leading-none inline-block`}>
                   {settings.displayName}
-                </span>
-                <span className="text-[10px] sm:text-xs text-slate-300 font-bold uppercase tracking-wide hidden md:inline">
-                  • {t('mosqueServices')}
                 </span>
               </div>
             </div>
           </div>
 
           {/* Center Actions: Language Switcher & Automatic Voice Alert Arm Indicator */}
-          <div className="flex items-center gap-2">
-            {/* Automatic Voice Alerts Status Pill */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Automatic Voice Alerts Status: Icon Only */}
             <button
               onClick={handleManualAudioUnlock}
-              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shadow-md ${
+              className={`p-2 rounded-xl text-base transition-all flex items-center justify-center border shadow-md shrink-0 ${
                 settings.azanAudio.enabled
                   ? audioReady
-                    ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300'
-                    : 'bg-amber-950/90 border-amber-500/60 text-amber-200 animate-pulse'
-                  : 'bg-slate-900/80 border-slate-700 text-slate-400'
+                    ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300 hover:scale-105'
+                    : 'bg-amber-950/90 border-amber-500/60 text-amber-200 animate-pulse hover:scale-105'
+                  : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:scale-105'
               }`}
-              title="Click to test or enable automated Azan & Iqamath voice alerts"
-            >
-              <span className="text-sm">{settings.azanAudio.enabled ? (audioReady ? '🔊' : '🔔') : '🔇'}</span>
-              <span className="hidden xl:inline text-[11px] font-black uppercase tracking-wider">
-                {settings.azanAudio.enabled
+              title={
+                settings.azanAudio.enabled
                   ? audioReady
-                    ? 'Voice Alerts: Armed'
-                    : 'Click to Enable Audio'
-                  : 'Alerts Muted'}
-              </span>
+                    ? 'Voice Alerts Armed: Madinah Azan & Iqamath'
+                    : 'Click to Enable Voice Alerts Audio'
+                  : 'Voice Alerts Muted'
+              }
+            >
+              <span>{settings.azanAudio.enabled ? (audioReady ? '🔊' : '🔔') : '🔇'}</span>
             </button>
 
             {/* Language & Arabic Mode Options */}
@@ -636,8 +632,8 @@ export const TVDisplay: React.FC = () => {
                 : '--:--:--'}
             </div>
             <div className="h-8 w-px bg-slate-700/60 hidden sm:block" />
-            <div className="text-right hidden sm:block">
-              <div className="text-[11px] sm:text-xs font-bold text-slate-200 uppercase tracking-wide">
+            <div className="text-right hidden sm:block whitespace-nowrap shrink-0">
+              <div className="text-[10px] sm:text-[11px] xl:text-xs font-bold text-slate-200 uppercase tracking-wide leading-tight">
                 {mounted
                   ? formatLocalizedDate(
                       time,
@@ -646,7 +642,7 @@ export const TVDisplay: React.FC = () => {
                     )
                   : '---'}
               </div>
-              <div className={`text-xs sm:text-sm font-arabic font-bold mt-0.5 transition-colors duration-1000 ${activeFontTheme.accentText}`}>
+              <div className={`text-xs sm:text-sm font-arabic font-bold mt-1 transition-colors duration-1000 leading-tight ${activeFontTheme.accentText}`}>
                 {mounted ? hijriDateStr : '---'}
               </div>
             </div>
@@ -728,7 +724,7 @@ export const TVDisplay: React.FC = () => {
                       /* Sunrise Section: No Iqamath option required */
                       <div className="bg-amber-950/40 border border-amber-500/20 rounded-xl px-2.5 py-1.5 text-center shrink-0">
                         <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-amber-200/90 font-mono">
-                          🌅 NO IQAMATH • DUHA TIME
+                          🌅 DUHA TIME
                         </span>
                       </div>
                     ) : (
@@ -782,10 +778,6 @@ export const TVDisplay: React.FC = () => {
                     }}
                   />
                 </div>
-
-                <p className="text-[10px] sm:text-xs text-sky-100/90 font-medium leading-tight">
-                  {t('iqamahNotice')}
-                </p>
               </div>
 
               {/* Box 2: Next Prayer & Voice Alert Live Status Box */}
