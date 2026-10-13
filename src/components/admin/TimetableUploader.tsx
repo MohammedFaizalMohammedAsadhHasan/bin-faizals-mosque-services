@@ -99,6 +99,7 @@ export const TimetableUploader: React.FC = () => {
           <p className="text-xs text-slate-500 mt-1">Supports Date, Subah, Sunrise, Luhar, Asr, Magrib, Isha columns</p>
         </label>
       </div>
+    
 
       <button
         onClick={handleUpload}

@@ -41,6 +41,9 @@ export interface AzanAudioSettings {
   asrAudio: string;
   maghribAudio: string;
   ishaAudio: string;
+  iqamahAudio?: string;
+  azanAlertEnabled?: boolean;
+  iqamahAlertEnabled?: boolean;
 }
 
 export interface WeatherSettings {
@@ -191,11 +194,14 @@ export const DEFAULT_SETTINGS: TVSettings = {
   azanAudio: {
     enabled: true,
     volume: 1.0,
-    fajrAudio: "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3",
-    dhuhrAudio: "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3",
-    asrAudio: "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3",
-    maghribAudio: "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3",
-    ishaAudio: "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3",
+    fajrAudio: "/audio/azan-madina.mp3",
+    dhuhrAudio: "/audio/azan-madina.mp3",
+    asrAudio: "/audio/azan-madina.mp3",
+    maghribAudio: "/audio/azan-madina.mp3",
+    ishaAudio: "/audio/azan-madina.mp3",
+    iqamahAudio: "/audio/iqamah-alert.mp3",
+    azanAlertEnabled: true,
+    iqamahAlertEnabled: true,
   },
   weather: {
     city: "Puttalam",
@@ -310,6 +316,20 @@ export function getTVSettings(): TVSettings {
       a.includes('inside the prayer hall') ? "📵Please turn off or silence your mobile phones inside the Mosque." : a
     );
 
+    const rawAudio = parsed.azanAudio || {};
+    const sanitizedAudio: AzanAudioSettings = {
+      ...DEFAULT_SETTINGS.azanAudio,
+      ...rawAudio,
+      fajrAudio: (!rawAudio.fajrAudio || rawAudio.fajrAudio.includes('mixkit')) ? '/audio/azan-madina.mp3' : rawAudio.fajrAudio,
+      dhuhrAudio: (!rawAudio.dhuhrAudio || rawAudio.dhuhrAudio.includes('mixkit')) ? '/audio/azan-madina.mp3' : rawAudio.dhuhrAudio,
+      asrAudio: (!rawAudio.asrAudio || rawAudio.asrAudio.includes('mixkit')) ? '/audio/azan-madina.mp3' : rawAudio.asrAudio,
+      maghribAudio: (!rawAudio.maghribAudio || rawAudio.maghribAudio.includes('mixkit')) ? '/audio/azan-madina.mp3' : rawAudio.maghribAudio,
+      ishaAudio: (!rawAudio.ishaAudio || rawAudio.ishaAudio.includes('mixkit')) ? '/audio/azan-madina.mp3' : rawAudio.ishaAudio,
+      iqamahAudio: (!rawAudio.iqamahAudio || rawAudio.iqamahAudio.includes('mixkit')) ? '/audio/iqamah-alert.mp3' : rawAudio.iqamahAudio,
+      azanAlertEnabled: rawAudio.azanAlertEnabled !== false,
+      iqamahAlertEnabled: rawAudio.iqamahAlertEnabled !== false,
+    };
+
     return {
       ...DEFAULT_SETTINGS,
       ...parsed,
@@ -323,7 +343,7 @@ export function getTVSettings(): TVSettings {
       iqamahOffsets: { ...DEFAULT_SETTINGS.iqamahOffsets, ...parsed.iqamahOffsets },
       customPrayerTimes: { ...DEFAULT_SETTINGS.customPrayerTimes, ...parsed.customPrayerTimes },
       customIqamahTimes: { ...DEFAULT_SETTINGS.customIqamahTimes, ...parsed.customIqamahTimes },
-      azanAudio: { ...DEFAULT_SETTINGS.azanAudio, ...parsed.azanAudio },
+      azanAudio: sanitizedAudio,
       weather: { ...DEFAULT_SETTINGS.weather, ...parsed.weather },
       specialPrayers: { ...DEFAULT_SETTINGS.specialPrayers, ...parsed.specialPrayers },
     };

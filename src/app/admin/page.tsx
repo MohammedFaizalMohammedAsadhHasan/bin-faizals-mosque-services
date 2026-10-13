@@ -469,26 +469,74 @@ export default function AdminPage() {
         {activeTab === 'audio' && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-sky-400 mb-2">
-              Full Azan Audio Settings & MP3 Assignments
+              Automatic Voice Alerts: Azan &amp; Iqamath Audio Management
             </h2>
 
-            <div className="flex items-center gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
-              <label className="text-sm font-bold text-slate-200">Enable Full Azan Audio Broadcast:</label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-950 p-5 rounded-2xl border border-slate-800">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.azanAudio.enabled}
+                  onChange={(e) => setSettings({
+                    ...settings,
+                    azanAudio: { ...settings.azanAudio, enabled: e.target.checked }
+                  })}
+                  className="w-5 h-5 accent-sky-400 cursor-pointer"
+                />
+                <span className="text-xs font-bold text-slate-200">🔊 Master Audio Alerts Enabled</span>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.azanAudio.azanAlertEnabled !== false}
+                  onChange={(e) => setSettings({
+                    ...settings,
+                    azanAudio: { ...settings.azanAudio, azanAlertEnabled: e.target.checked }
+                  })}
+                  className="w-5 h-5 accent-sky-400 cursor-pointer"
+                />
+                <span className="text-xs font-bold text-slate-200">🕌 Azan Voice Alert</span>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.azanAudio.iqamahAlertEnabled !== false}
+                  onChange={(e) => setSettings({
+                    ...settings,
+                    azanAudio: { ...settings.azanAudio, iqamahAlertEnabled: e.target.checked }
+                  })}
+                  className="w-5 h-5 accent-sky-400 cursor-pointer"
+                />
+                <span className="text-xs font-bold text-slate-200">📣 Iqamath Voice Alert</span>
+              </label>
+            </div>
+
+            {/* Volume Control Slider */}
+            <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+              <div className="flex justify-between items-center text-xs font-bold text-slate-300 mb-2">
+                <span>🔊 Voice Alert Speaker Volume:</span>
+                <span className="font-mono text-sky-400 text-sm">{Math.round((settings.azanAudio.volume ?? 1) * 100)}%</span>
+              </div>
               <input
-                type="checkbox"
-                checked={settings.azanAudio.enabled}
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={settings.azanAudio.volume ?? 1}
                 onChange={(e) => setSettings({
                   ...settings,
-                  azanAudio: { ...settings.azanAudio, enabled: e.target.checked }
+                  azanAudio: { ...settings.azanAudio, volume: parseFloat(e.target.value) || 0 }
                 })}
-                className="w-5 h-5 accent-sky-400 cursor-pointer"
+                className="w-full accent-sky-400 cursor-pointer"
               />
             </div>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-2">
-                  🕌 Fajr Azan MP3 URL
+                  🕌 Melodious Azan Voice Alert Audio (Fajr / Subah)
                 </label>
                 <div className="flex gap-3">
                   <input
@@ -517,7 +565,7 @@ export default function AdminPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-2">
-                  ☀ Standard Daily Azan MP3 URL (Dhuhr, Asr, Maghrib, Isha)
+                  ☀ Standard Daily Azan Voice Alert Audio (Luhar, Asr, Maghrib, Isha)
                 </label>
                 <div className="flex gap-3">
                   <input
@@ -548,6 +596,41 @@ export default function AdminPage() {
                     ⏹ Stop
                   </button>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-300 uppercase mb-2">
+                  📣 Automated Iqamath Voice Alert Audio (Subah, Luhar, Asr, Maghrib, Isha)
+                </label>
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={settings.azanAudio.iqamahAudio || '/audio/iqamah-alert.mp3'}
+                    onChange={(e) => setSettings({
+                      ...settings,
+                      azanAudio: {
+                        ...settings.azanAudio,
+                        iqamahAudio: e.target.value,
+                      }
+                    })}
+                    className="flex-1 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs font-mono focus:border-sky-400 focus:outline-none"
+                  />
+                  <button
+                    onClick={() => handleTestAudio(settings.azanAudio.iqamahAudio || '/audio/iqamah-alert.mp3')}
+                    className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-md"
+                  >
+                    ▶ Test Audio
+                  </button>
+                  <button
+                    onClick={stopAzanAudio}
+                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl"
+                  >
+                    ⏹ Stop
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  * Note: Sunrise strictly does not trigger an Iqamath alert.
+                </p>
               </div>
             </div>
           </div>

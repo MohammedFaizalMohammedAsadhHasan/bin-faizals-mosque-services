@@ -250,10 +250,16 @@ export default function PublicHomePage() {
                       <div className={`text-3xl sm:text-4xl lg:text-5xl font-black font-mono my-2.5 ${isActive ? 'text-sky-300 drop-shadow-xl' : 'text-white'}`}>
                         {formatPrayerTime(item.azan)}
                       </div>
-                      <div className="text-xs sm:text-sm text-slate-300 font-bold border-t border-white/10 pt-2.5 flex justify-between items-center">
-                        <span className="uppercase text-slate-400 text-[11px] font-black">{getTranslation(currentLang, 'iqamah')}</span>
-                        <span className="font-mono text-sky-400 font-bold">{item.iqamah}</span>
-                      </div>
+                      {item.key === 'sunrise' ? (
+                        <div className="text-xs sm:text-sm text-amber-300 font-bold border-t border-white/10 pt-2.5 text-center font-mono">
+                          🌅 Duha / Ishraq • No Iqamath Required
+                        </div>
+                      ) : (
+                        <div className="text-xs sm:text-sm text-slate-300 font-bold border-t border-white/10 pt-2.5 flex justify-between items-center">
+                          <span className="uppercase text-slate-400 text-[11px] font-black">{getTranslation(currentLang, 'iqamah')}</span>
+                          <span className="font-mono text-sky-400 font-bold">{item.iqamah}</span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
