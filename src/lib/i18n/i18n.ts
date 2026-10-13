@@ -68,6 +68,9 @@ export const TRANSLATIONS: Record<CanonicalLanguageCode, Record<string, string>>
     qiblaCompass: "Qibla Direction Compass",
     adminPortal: "Mosque Admin Portal",
     launchTV: "Launch Smart TV Display",
+    numeralFormat: "Numbers Format",
+    arabicNumbers: "Arabic Numerals (٠١٢٣٤)",
+    defaultNumbers: "Default Numerals (01234)",
   },
   ar: {
     fajr: "صَلَاةُ الفَجْر",
@@ -99,6 +102,9 @@ export const TRANSLATIONS: Record<CanonicalLanguageCode, Record<string, string>>
     qiblaCompass: "بوصلة اتجاه القبلة",
     adminPortal: "لوحة تحكم المسجد",
     launchTV: "تشغيل شاشة التلفاز",
+    numeralFormat: "صيغة الأرقام",
+    arabicNumbers: "الأرقام الشرقية (٠١٢٣٤)",
+    defaultNumbers: "الأرقام الافتراضية (01234)",
   },
   ta: {
     fajr: "சுபஹ் / ஃபஜ்ர்",
@@ -130,6 +136,9 @@ export const TRANSLATIONS: Record<CanonicalLanguageCode, Record<string, string>>
     qiblaCompass: "கிப்லா திசை காட்டி",
     adminPortal: "நிர்வாகக் குழு கட்டுப்பாட்டு அறை",
     launchTV: "டிவி திரையைத் தொடங்கு",
+    numeralFormat: "எண்கள் வடிவம்",
+    arabicNumbers: "அரபு எண்கள் (٠١٢٣)",
+    defaultNumbers: "இயல்பு எண்கள் (0123)",
   },
   si: {
     fajr: "සුබහ් / ෆජ්ර්",
@@ -161,8 +170,17 @@ export const TRANSLATIONS: Record<CanonicalLanguageCode, Record<string, string>>
     qiblaCompass: "කිබ්ලා දිශාව",
     adminPortal: "පරිපාලක පුවරුව",
     launchTV: "රූපවාහිනී සංදර්ශකය අරඹන්න",
+    numeralFormat: "අංක ආකෘතිය",
+    arabicNumbers: "අරාබි අංක (٠١٢٣)",
+    defaultNumbers: "සාමාන්‍ය අංක (0123)",
   },
 };
+
+export function toEasternArabicNumerals(str: string | number): string {
+  if (str === null || str === undefined) return '';
+  const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  return String(str).replace(/[0-9]/g, (w) => arabicDigits[+w]);
+}
 
 export function getTranslation(lang: LanguageCode, key: string): string {
   const norm = (lang ? String(lang).toLowerCase() : 'en') as CanonicalLanguageCode;
@@ -173,21 +191,26 @@ export function getTranslation(lang: LanguageCode, key: string): string {
 /**
  * Returns localized Gregorian Date string (e.g., "Monday, 12 October 2026" in selected language)
  */
-export function formatLocalizedDate(date: Date, lang: LanguageCode): string {
+export function formatLocalizedDate(date: Date, lang: LanguageCode, useEasternDigits: boolean = false): string {
   const norm = (lang ? String(lang).toLowerCase() : 'en') as CanonicalLanguageCode;
   const dayName = DAYS_OF_WEEK[norm]?.[date.getDay()] ?? DAYS_OF_WEEK.en[date.getDay()];
   const monthName = GREGORIAN_MONTHS[norm]?.[date.getMonth()] ?? GREGORIAN_MONTHS.en[date.getMonth()];
   const dayNum = date.getDate();
   const yearNum = date.getFullYear();
 
+  let formatted = '';
   if (norm === 'ar') {
-    return `${dayName}، ${dayNum} ${monthName} ${yearNum}`;
+    formatted = `${dayName}، ${dayNum} ${monthName} ${yearNum}`;
+  } else if (norm === 'ta') {
+    formatted = `${dayName}, ${dayNum} ${monthName} ${yearNum}`;
+  } else if (norm === 'si') {
+    formatted = `${dayName}, ${yearNum} ${monthName} ${dayNum}`;
+  } else {
+    formatted = `${dayName}, ${monthName} ${dayNum}, ${yearNum}`;
   }
-  if (norm === 'ta') {
-    return `${dayName}, ${dayNum} ${monthName} ${yearNum}`;
+
+  if (norm === 'ar' && useEasternDigits) {
+    return toEasternArabicNumerals(formatted);
   }
-  if (norm === 'si') {
-    return `${dayName}, ${yearNum} ${monthName} ${dayNum}`;
-  }
-  return `${dayName}, ${monthName} ${dayNum}, ${yearNum}`;
+  return formatted;
 }

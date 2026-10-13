@@ -182,6 +182,18 @@ export default function AdminPage() {
                   <label className="flex items-center gap-2 cursor-pointer bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">
                     <input
                       type="checkbox"
+                      checked={settings.arabicNumerals ?? false}
+                      onChange={(e) => setSettings({ ...settings, arabicNumerals: e.target.checked })}
+                      className="w-4 h-4 accent-sky-400 cursor-pointer"
+                    />
+                    <span className="text-xs font-semibold text-slate-200">
+                      🇸🇦 Eastern Arabic Numerals (الأرقام الشرقية ٠-٩) in Arabic Mode
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">
+                    <input
+                      type="checkbox"
                       checked={settings.phoneSilentAlertEnabled ?? true}
                       onChange={(e) => setSettings({ ...settings, phoneSilentAlertEnabled: e.target.checked })}
                       className="w-4 h-4 accent-sky-400 cursor-pointer"
@@ -322,6 +334,18 @@ export default function AdminPage() {
                     />
                     <span className="text-xs font-bold text-slate-200">
                       ⏱ 24-Hour Military Time Format (e.g. 13:15 instead of 01:15 PM)
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-3 cursor-pointer bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                    <input
+                      type="checkbox"
+                      checked={settings.arabicNumerals ?? false}
+                      onChange={(e) => setSettings({ ...settings, arabicNumerals: e.target.checked })}
+                      className="w-4 h-4 accent-sky-400 cursor-pointer"
+                    />
+                    <span className="text-xs font-bold text-slate-200">
+                      🇸🇦 Eastern Arabic Numerals (الأرقام الشرقية ٠-٩) in Arabic Mode
                     </span>
                   </label>
 

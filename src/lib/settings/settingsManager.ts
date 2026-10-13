@@ -148,6 +148,7 @@ export interface TVSettings {
   islamicContent: IslamicSlide[];
   fontColorCycleSeconds?: number;
   fontColorTheme?: string;
+  arabicNumerals?: boolean;
 }
 
 export const DEFAULT_SETTINGS: TVSettings = {
@@ -166,6 +167,7 @@ export const DEFAULT_SETTINGS: TVSettings = {
   showSunrise: true,
   tarawihEnabled: false,
   phoneSilentAlertEnabled: true,
+  arabicNumerals: false,
   mosqueName: "MOHIDHEEN THAIKKA MOSQUE",
   brandTitle: "BIN FAIZAL'S",
   subtitle: "Mosque Services",
@@ -217,7 +219,7 @@ export const DEFAULT_SETTINGS: TVSettings = {
   fontColorTheme: 'royal-cycle',
   announcements: [
     "📢 Welcome to BIN FAIZAL'S Mosque Smart TV",
-    "Please turn off or silence your mobile phones inside the prayer hall.",
+    "📵Please turn off or silence your mobile phones inside the Mosque.",
     "🤲 May Allah accept all our prayers and ibadah"
   ],
   specialPrayers: {
@@ -295,16 +297,34 @@ export function getTVSettings(): TVSettings {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_SETTINGS;
     const parsed = JSON.parse(raw);
+
+    // Sanitize background slides to ensure ONLY pure masjid architecture images
+    const rawSlides: string[] = Array.isArray(parsed.background?.slides) ? parsed.background.slides : [];
+    const sanitizedSlides = rawSlides.some((s: string) => s.includes('unsplash') || s.includes('http')) || rawSlides.length === 0
+      ? DEFAULT_SETTINGS.background.slides
+      : rawSlides;
+
+    // Migrate announcement to current requested text if old version was cached
+    let announcements = Array.isArray(parsed.announcements) ? parsed.announcements : DEFAULT_SETTINGS.announcements;
+    announcements = announcements.map((a: string) =>
+      a.includes('inside the prayer hall') ? "📵Please turn off or silence your mobile phones inside the Mosque." : a
+    );
+
     return {
       ...DEFAULT_SETTINGS,
       ...parsed,
+      announcements,
+      background: {
+        ...DEFAULT_SETTINGS.background,
+        ...parsed.background,
+        slides: sanitizedSlides,
+      },
       contact: { ...DEFAULT_SETTINGS.contact, ...parsed.contact },
       iqamahOffsets: { ...DEFAULT_SETTINGS.iqamahOffsets, ...parsed.iqamahOffsets },
       customPrayerTimes: { ...DEFAULT_SETTINGS.customPrayerTimes, ...parsed.customPrayerTimes },
       customIqamahTimes: { ...DEFAULT_SETTINGS.customIqamahTimes, ...parsed.customIqamahTimes },
       azanAudio: { ...DEFAULT_SETTINGS.azanAudio, ...parsed.azanAudio },
       weather: { ...DEFAULT_SETTINGS.weather, ...parsed.weather },
-      background: { ...DEFAULT_SETTINGS.background, ...parsed.background },
       specialPrayers: { ...DEFAULT_SETTINGS.specialPrayers, ...parsed.specialPrayers },
     };
   } catch {

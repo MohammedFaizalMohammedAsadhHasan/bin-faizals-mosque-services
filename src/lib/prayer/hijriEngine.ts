@@ -122,14 +122,19 @@ const HIJRI_MONTHS_SI = [
 /**
  * Returns formatted Hijri Date string localized according to current language
  */
-export function getFormattedHijriDate(date: Date = new Date(), dayOffset: number = 0, lang: string = 'ar'): string {
+export function getFormattedHijriDate(
+  date: Date = new Date(),
+  dayOffset: number = 0,
+  lang: string = 'ar',
+  useEasternDigits: boolean = true
+): string {
   const hijri = getHijriDate(date, dayOffset);
   const norm = (lang || 'ar').toLowerCase();
   const monthIdx = Math.max(0, Math.min(11, hijri.month - 1));
 
   if (norm === 'ar') {
-    const arDay = toArabicDigits(hijri.day);
-    const arYear = toArabicDigits(hijri.year);
+    const arDay = useEasternDigits ? toArabicDigits(hijri.day) : hijri.day;
+    const arYear = useEasternDigits ? toArabicDigits(hijri.year) : hijri.year;
     return `${arDay} ${hijri.monthNameAr} ${arYear} هـ`;
   }
 

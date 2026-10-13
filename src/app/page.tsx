@@ -8,7 +8,7 @@ import { AmbientBubbles } from '@/components/ui/AmbientBubbles';
 import { resolvePrayerTimesAsync, resolvePrayerState, formatTo12Hour, PrayerTimes, PrayerState } from '@/lib/prayer/prayerEngine';
 import { getFormattedHijriDate } from '@/lib/prayer/hijriEngine';
 import { getTVSettings, saveTVSettings, SRI_LANKA_ZONES } from '@/lib/settings/settingsManager';
-import { LanguageCode, getTranslation, formatLocalizedDate, LANGUAGES } from '@/lib/i18n/i18n';
+import { LanguageCode, getTranslation, formatLocalizedDate, toEasternArabicNumerals, LANGUAGES } from '@/lib/i18n/i18n';
 
 export default function PublicHomePage() {
   const [showSplash, setShowSplash] = useState(true);
@@ -19,6 +19,7 @@ export default function PublicHomePage() {
   const [currentLang, setCurrentLang] = useState<LanguageCode>('en');
   const [time24Format, setTime24Format] = useState(false);
   const [zoneLabel, setZoneLabel] = useState('Zone 01');
+  const [arabicNumerals, setArabicNumerals] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -27,6 +28,7 @@ export default function PublicHomePage() {
       setCurrentLang(settings.language);
     }
     setTime24Format(settings.time24Format ?? false);
+    setArabicNumerals(settings.arabicNumerals ?? false);
     const z = SRI_LANKA_ZONES.find((item) => item.id === settings.selectedZoneId);
     if (z) setZoneLabel(z.name);
   }, []);
@@ -37,7 +39,7 @@ export default function PublicHomePage() {
       const todayTimes = await resolvePrayerTimesAsync(now);
       setTimes(todayTimes);
       setPrayerState(resolvePrayerState(todayTimes, now));
-      setHijriDateStr(getFormattedHijriDate(now, 0, currentLang));
+      setHijriDateStr(getFormattedHijriDate(now, 0, currentLang, arabicNumerals));
     };
 
     initSchedule();
@@ -47,11 +49,11 @@ export default function PublicHomePage() {
       const activeTimes = await resolvePrayerTimesAsync(current);
       setTimes(activeTimes);
       setPrayerState(resolvePrayerState(activeTimes, current));
-      setHijriDateStr(getFormattedHijriDate(current, 0, currentLang));
+      setHijriDateStr(getFormattedHijriDate(current, 0, currentLang, arabicNumerals));
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [currentLang]);
+  }, [currentLang, arabicNumerals]);
 
   const handleLanguageSelect = (lang: LanguageCode) => {
     setCurrentLang(lang);
@@ -64,13 +66,14 @@ export default function PublicHomePage() {
     const hrs = Math.floor(sec / 3600);
     const mins = Math.floor((sec % 3600) / 60);
     const secs = sec % 60;
-    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    const raw = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return currentLang === 'ar' && arabicNumerals ? toEasternArabicNumerals(raw) : raw;
   };
 
   const formatPrayerTime = (timeStr?: string) => {
     if (!timeStr) return '-';
-    if (time24Format) return timeStr;
-    return formatTo12Hour(timeStr);
+    const formatted = time24Format ? timeStr : formatTo12Hour(timeStr);
+    return currentLang === 'ar' && arabicNumerals ? toEasternArabicNumerals(formatted) : formatted;
   };
 
   const getPrayerName = (prayerKey: string) => {
@@ -124,6 +127,23 @@ export default function PublicHomePage() {
                 })}
               </div>
 
+              {/* Eastern Arabic Numerals Toggle (Appears when Arabic language is selected) */}
+              {currentLang === 'ar' && (
+                <button
+                  onClick={() => {
+                    const next = !arabicNumerals;
+                    setArabicNumerals(next);
+                    const s = getTVSettings();
+                    s.arabicNumerals = next;
+                    saveTVSettings(s);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-slate-900 border border-sky-400/40 text-sky-300 text-xs font-black tracking-wider hover:bg-slate-800 transition-all shadow-md"
+                  title="تبديل الأرقام بين الشرقية (٠-٩) والافتراضية (0-9)"
+                >
+                  {arabicNumerals ? 'الأرقام: ٠١٢٣' : 'الأرقام: 0123'}
+                </button>
+              )}
+
               <div className="hidden sm:flex gap-2">
                 <Link
                   href="/tv"
@@ -165,7 +185,7 @@ export default function PublicHomePage() {
                       {currentLang === 'ar' ? 'التاريخ الميلادي' : currentLang === 'ta' ? 'கிரிகோரியன் திகதி' : currentLang === 'si' ? 'ග්‍රෙගෝරියානු දින දර්ශනය' : 'Gregorian Date'}
                     </span>
                     <span className="font-bold text-white text-sm">
-                      {mounted ? formatLocalizedDate(new Date(), currentLang) : '---'}
+                      {mounted ? formatLocalizedDate(new Date(), currentLang, currentLang === 'ar' && arabicNumerals) : '---'}
                     </span>
                   </div>
                   <div className="text-right">
@@ -203,7 +223,7 @@ export default function PublicHomePage() {
                 </a>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-5">
                 {[
                   { key: 'fajr', name: getTranslation(currentLang, 'fajr'), azan: times.fajr, iqamah: '+20 mins' },
                   { key: 'sunrise', name: getTranslation(currentLang, 'sunrise'), azan: times.sunrise, iqamah: '-' },
@@ -216,20 +236,23 @@ export default function PublicHomePage() {
                   return (
                     <div
                       key={item.key}
-                      className={`p-5 rounded-2xl border transition-all ${
+                      className={`p-5 sm:p-6 rounded-2xl border transition-all shadow-xl ${
                         isActive
-                          ? 'glass-card-active pulse-royal'
-                          : 'glass-card-inactive'
+                          ? 'glass-card-active pulse-royal border-sky-400'
+                          : 'glass-card-inactive border-white/10'
                       }`}
                     >
-                      <div className={`text-xs font-black uppercase tracking-wider ${isActive ? 'text-sky-300' : 'text-slate-300'}`}>
+                      <div className={`text-base sm:text-lg xl:text-xl font-black uppercase tracking-wider ${
+                        currentLang === 'ar' ? 'font-arabic' : ''
+                      } ${isActive ? 'text-sky-300' : 'text-slate-100'}`}>
                         {item.name}
                       </div>
-                      <div className={`text-2xl sm:text-3xl font-black font-mono my-2 ${isActive ? 'text-sky-300 drop-shadow' : 'text-slate-100'}`}>
+                      <div className={`text-3xl sm:text-4xl lg:text-5xl font-black font-mono my-2.5 ${isActive ? 'text-sky-300 drop-shadow-xl' : 'text-white'}`}>
                         {formatPrayerTime(item.azan)}
                       </div>
-                      <div className="text-xs text-slate-400 font-semibold border-t border-white/10 pt-2">
-                        {getTranslation(currentLang, 'iqamah')}: {item.iqamah}
+                      <div className="text-xs sm:text-sm text-slate-300 font-bold border-t border-white/10 pt-2.5 flex justify-between items-center">
+                        <span className="uppercase text-slate-400 text-[11px] font-black">{getTranslation(currentLang, 'iqamah')}</span>
+                        <span className="font-mono text-sky-400 font-bold">{item.iqamah}</span>
                       </div>
                     </div>
                   );

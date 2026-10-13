@@ -26,7 +26,7 @@ import {
   SRI_LANKA_ZONES
 } from '@/lib/settings/settingsManager';
 import { fetchLiveWeather, WeatherData } from '@/lib/weather/weatherEngine';
-import { getTranslation, formatLocalizedDate, LANGUAGES, LanguageCode } from '@/lib/i18n/i18n';
+import { getTranslation, formatLocalizedDate, toEasternArabicNumerals, LANGUAGES, LanguageCode } from '@/lib/i18n/i18n';
 
 // 5 Harmonic Luxury Font Color Themes connecting with Royal Mosque background
 export interface FontTheme {
@@ -208,7 +208,7 @@ export const TVDisplay: React.FC = () => {
       const currentState = resolvePrayerState(activeTimes, now);
       setPrayerState(currentState);
 
-      setHijriDateStr(getFormattedHijriDate(now, 0, lang));
+      setHijriDateStr(getFormattedHijriDate(now, 0, lang, settings.arabicNumerals ?? false));
 
       // Trigger "Silent Phone Alert" when prayer is in progress (passed Azan & at/near Iqamah)
       if (settings.phoneSilentAlertEnabled !== false && currentState.isIqamahActive) {
@@ -219,7 +219,7 @@ export const TVDisplay: React.FC = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [settings.phoneSilentAlertEnabled, lang]);
+  }, [settings.phoneSilentAlertEnabled, settings.arabicNumerals, lang]);
 
   // 12-Second Islamic Content Slide Rotator
   const slidesList = settings.islamicContent && settings.islamicContent.length > 0
@@ -251,34 +251,39 @@ export const TVDisplay: React.FC = () => {
     const hrs = Math.floor(sec / 3600);
     const mins = Math.floor((sec % 3600) / 60);
     const secs = sec % 60;
-    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    const raw = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return (lang === 'ar' && settings.arabicNumerals) ? toEasternArabicNumerals(raw) : raw;
   };
 
   const formatDisplayTime = (timeStr?: string) => {
     if (!timeStr) return '--:--';
-    if (settings.time24Format) return timeStr;
-    return formatTo12Hour(timeStr);
+    const formatted = settings.time24Format ? timeStr : formatTo12Hour(timeStr);
+    return (lang === 'ar' && settings.arabicNumerals) ? toEasternArabicNumerals(formatted) : formatted;
   };
 
   const computeIqamahTimeStr = (
     prayerKey: keyof typeof settings.iqamahOffsets,
     azanTimeStr?: string
   ): { formatted: string; offsetLabel: string } => {
+    const isArNumerals = lang === 'ar' && settings.arabicNumerals;
     const customTime = settings.customIqamahTimes?.[prayerKey as keyof typeof settings.customIqamahTimes];
     if (customTime && customTime.trim() !== '') {
+      const base = settings.time24Format ? customTime : formatTo12Hour(customTime);
       return {
-        formatted: settings.time24Format ? customTime : formatTo12Hour(customTime),
-        offsetLabel: 'Manual Time'
+        formatted: isArNumerals ? toEasternArabicNumerals(base) : base,
+        offsetLabel: lang === 'ar' ? 'يدوي' : 'Manual Time'
       };
     }
 
     if (!azanTimeStr) return { formatted: '--:--', offsetLabel: '' };
     const offsetMin = settings.iqamahOffsets[prayerKey] || 0;
     const computed24 = adjustTimeString(azanTimeStr, offsetMin);
+    const base = settings.time24Format ? computed24 : formatTo12Hour(computed24);
+    const offsetTxt = lang === 'ar' ? `+${offsetMin}د` : `+${offsetMin}m`;
 
     return {
-      formatted: settings.time24Format ? computed24 : formatTo12Hour(computed24),
-      offsetLabel: `+${offsetMin}m`
+      formatted: isArNumerals ? toEasternArabicNumerals(base) : base,
+      offsetLabel: isArNumerals ? toEasternArabicNumerals(offsetTxt) : offsetTxt
     };
   };
 
@@ -305,10 +310,10 @@ export const TVDisplay: React.FC = () => {
   const announcementsList = settings.announcements && settings.announcements.length > 0
     ? settings.announcements
     : [
-        "📢 Welcome to BIN FAIZAL'S Mosque Smart TV",
-        "Please turn off or silence your mobile phones inside the prayer hall.",
-        "🤲 May Allah accept all our prayers and ibadah"
-      ];
+      "📢 Welcome to BIN FAIZAL'S Mosque Smart TV",
+      "📵Please turn off or silence your mobile phones inside the Mosque.",
+      "🤲 May Allah accept all our prayers and ibadah"
+    ];
   const announcementsStr = announcementsList.join('   ✦   ');
 
   return (
@@ -352,23 +357,37 @@ export const TVDisplay: React.FC = () => {
             </div>
           </div>
 
-          {/* Multi-Language Selector Controls */}
+          {/* Multi-Language Selector Controls & Arabic Numerals Quick Toggle */}
           <div className="flex items-center gap-1.5 bg-slate-900/80 border border-blue-500/30 px-3 py-1.5 rounded-xl backdrop-blur-md">
             {LANGUAGES.map((l) => (
               <button
                 key={l.code}
                 onClick={() => setLanguage(l.code)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                  lang === l.code
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${lang === l.code
                     ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black scale-105'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800'
-                }`}
+                  }`}
                 title={l.label}
               >
                 <span>{l.flag}</span>
                 <span>{l.code.toUpperCase()}</span>
               </button>
             ))}
+
+            {/* Arabic Numerals Quick Toggle (when Arabic is active) */}
+            {lang === 'ar' && (
+              <button
+                onClick={() => {
+                  const updated = { ...settings, arabicNumerals: !settings.arabicNumerals };
+                  setSettings(updated);
+                  saveTVSettings(updated);
+                }}
+                className="px-2 py-1 rounded-lg text-xs font-black bg-blue-950 hover:bg-blue-900 border border-sky-400/50 text-sky-200 transition-all ml-1 shadow-sm"
+                title={settings.arabicNumerals ? "تبديل إلى الأرقام الافتراضية (0-9)" : "تبديل إلى الأرقام الشرقية (٠-٩)"}
+              >
+                {settings.arabicNumerals ? '٠١٢٣' : '0123'}
+              </button>
+            )}
           </div>
 
           {/* Live Weather Widget */}
@@ -393,18 +412,21 @@ export const TVDisplay: React.FC = () => {
           <div className="text-right flex items-center gap-6">
             <div className={`text-4xl md:text-5xl font-black font-mono tracking-tight transition-all duration-1000 ${activeFontTheme.clockGlow}`}>
               {mounted
-                ? time.toLocaleTimeString(lang === 'ar' ? 'ar-SA' : 'en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: !settings.time24Format
-                  })
+                ? (() => {
+                    const raw = time.toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: !settings.time24Format
+                    });
+                    return (lang === 'ar' && settings.arabicNumerals) ? toEasternArabicNumerals(raw) : raw;
+                  })()
                 : '--:--:--'}
             </div>
             <div className="h-10 w-px bg-slate-700/60" />
             <div className="text-right">
               <div className="text-xs md:text-sm font-bold text-slate-200 uppercase tracking-wide">
-                {mounted ? formatLocalizedDate(time, lang) : '---'}
+                {mounted ? formatLocalizedDate(time, lang, settings.arabicNumerals ?? false) : '---'}
               </div>
               <div className={`text-sm md:text-base font-arabic font-bold mt-0.5 transition-colors duration-1000 ${activeFontTheme.accentText}`}>
                 {mounted ? hijriDateStr : '---'}
@@ -426,7 +448,7 @@ export const TVDisplay: React.FC = () => {
           <SpecialPrayerBanner specialPrayers={settings.specialPrayers} />
 
           <div className="grid grid-cols-12 gap-5 flex-1 items-stretch overflow-hidden">
-            {/* Left Side: Daily Prayer Cards with Azan & Iqamah */}
+            {/* Left Side: Daily Prayer Cards with Extra Large Fonts & Times for Elders */}
             <div className={`col-span-8 grid ${prayersList.length > 5 ? 'grid-cols-3 grid-rows-2' : 'grid-cols-5 grid-rows-1'} gap-4 h-full`}>
               {prayersList.map((item) => {
                 const isActive = prayerState.nextPrayer === item.key;
@@ -437,49 +459,57 @@ export const TVDisplay: React.FC = () => {
                 return (
                   <div
                     key={item.key}
-                    className={`flex flex-col justify-between p-5 rounded-2xl transition-all duration-500 ${
-                      isActive
+                    className={`flex flex-col justify-between p-4 sm:p-5 rounded-2xl transition-all duration-500 shadow-2xl ${isActive
                         ? `glass-card-active pulse-royal border-2 ${activeFontTheme.cardActiveBorder}`
-                        : 'glass-card-inactive'
-                    }`}
+                        : 'glass-card-inactive border border-white/10'
+                      }`}
                   >
-                    <div className="flex justify-between items-center">
-                      <span className={`text-sm font-black tracking-widest uppercase transition-colors duration-1000 ${isActive ? activeFontTheme.accentText : 'text-slate-300'}`}>
+                    {/* Top: Large Prayer Name & Next Indicator */}
+                    <div className="flex justify-between items-center gap-2">
+                      <span className={`text-xl sm:text-2xl xl:text-3xl font-black uppercase tracking-wide drop-shadow transition-colors duration-1000 ${
+                        lang === 'ar' ? 'font-arabic leading-tight' : ''
+                      } ${isActive ? activeFontTheme.accentText : 'text-slate-100'}`}>
                         {item.label}
                       </span>
                       {isActive && (
-                        <span className={`px-3 py-0.5 text-white text-[10px] font-black tracking-widest rounded-full uppercase shadow-md transition-all duration-1000 ${activeFontTheme.cardActiveGlow}`}>
+                        <span className={`px-2.5 sm:px-3 py-1 text-white text-xs sm:text-sm font-black tracking-wider rounded-full uppercase shadow-md shrink-0 transition-all duration-1000 ${activeFontTheme.cardActiveGlow}`}>
                           {t('next')}
                         </span>
                       )}
                     </div>
 
-                    {/* Azan Time */}
-                    <div>
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-0.5">{t('azan')}</span>
-                      <div className={`text-3xl lg:text-4xl font-black font-mono tracking-tight transition-all duration-1000 ${
-                        isActive ? activeFontTheme.prayerActiveTime : 'text-slate-100'
+                    {/* Middle: Prominent Azan Label & Giant Time Numbers for Elders */}
+                    <div className="my-1 sm:my-1.5">
+                      <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-300 block mb-0.5">
+                        {t('azan')}
+                      </span>
+                      <div className={`text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-black font-mono tracking-tight leading-none drop-shadow-xl transition-all duration-1000 ${
+                        isActive ? activeFontTheme.prayerActiveTime : 'text-white'
                       }`}>
                         {formatDisplayTime(item.azan24)}
                       </div>
                     </div>
 
-                    {/* Iqamah Time Display */}
-                    <div className="flex justify-between items-center text-xs font-semibold border-t border-white/10 pt-2.5">
-                      <span className="text-slate-400 font-bold text-[11px]">{t('iqamah')}</span>
+                    {/* Bottom: Dedicated Iqamah Sub-Panel with Clear Label & Prominent Time */}
+                    <div className="bg-slate-950/70 border border-white/10 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 flex justify-between items-center mt-2 shadow-inner">
+                      <span className="text-xs sm:text-sm xl:text-base font-black uppercase tracking-wider text-slate-200">
+                        {t('iqamah')}
+                      </span>
                       {iqamahInfo ? (
                         <div className="text-right">
-                          <span className={`font-mono font-bold text-sm block transition-colors duration-1000 ${activeFontTheme.accentText}`}>
+                          <span className={`font-mono font-black text-2xl sm:text-3xl xl:text-4xl block leading-none transition-colors duration-1000 ${
+                            isActive ? activeFontTheme.accentText : 'text-sky-300'
+                          }`}>
                             {iqamahInfo.formatted}
                           </span>
                           {iqamahInfo.offsetLabel && (
-                            <span className="text-[9px] text-slate-400 font-mono block">
+                            <span className="text-xs sm:text-sm font-mono font-bold text-sky-400 block mt-0.5">
                               {iqamahInfo.offsetLabel}
                             </span>
                           )}
                         </div>
                       ) : (
-                        <span className="text-slate-500 font-mono">-</span>
+                        <span className="text-slate-500 font-mono font-bold text-xl">-</span>
                       )}
                     </div>
                   </div>
@@ -604,16 +634,57 @@ export const TVDisplay: React.FC = () => {
                     <button
                       key={l.code}
                       onClick={() => setLanguage(l.code)}
-                      className={`p-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 ${
-                        lang === l.code
+                      className={`p-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 ${lang === l.code
                           ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white font-black shadow-md'
                           : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
-                      }`}
+                        }`}
                     >
                       <span>{l.flag}</span>
                       <span>{l.label}</span>
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Arabic Numerals Setting: Eastern Arabic vs Default Numbers */}
+              <div className="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-xs font-bold text-slate-300 uppercase">
+                    {t('numeralFormat')} (Arabic Mode)
+                  </label>
+                  <span className="text-[11px] font-mono text-sky-300 font-bold">
+                    {settings.arabicNumerals ? 'الأرقام الشرقية (٠-٩)' : 'Default (0-9)'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      const updated = { ...settings, arabicNumerals: false };
+                      setSettings(updated);
+                      saveTVSettings(updated);
+                    }}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all ${
+                      !settings.arabicNumerals
+                        ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white font-black shadow-md'
+                        : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                    }`}
+                  >
+                    {t('defaultNumbers')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      const updated = { ...settings, arabicNumerals: true };
+                      setSettings(updated);
+                      saveTVSettings(updated);
+                    }}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all ${
+                      settings.arabicNumerals
+                        ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white font-black shadow-md'
+                        : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                    }`}
+                  >
+                    {t('arabicNumbers')}
+                  </button>
                 </div>
               </div>
 
@@ -634,11 +705,10 @@ export const TVDisplay: React.FC = () => {
                     <button
                       key={theme.id}
                       onClick={() => setFontThemeIndex(idx)}
-                      className={`p-2 rounded-xl text-[11px] font-bold border transition-all flex flex-col items-center gap-1 ${
-                        (fontThemeIndex % FONT_THEMES.length) === idx
+                      className={`p-2 rounded-xl text-[11px] font-bold border transition-all flex flex-col items-center gap-1 ${(fontThemeIndex % FONT_THEMES.length) === idx
                           ? 'border-white bg-slate-800 shadow-lg scale-105'
                           : 'border-slate-800 bg-slate-900/80 hover:border-slate-600'
-                      }`}
+                        }`}
                     >
                       <span className="w-4 h-4 rounded-full border border-white/40" style={{ backgroundColor: theme.previewColor }} />
                       <span className="truncate w-full text-center text-[10px]" style={{ color: theme.previewColor }}>{theme.name.split(' ')[0]}</span>
@@ -663,11 +733,10 @@ export const TVDisplay: React.FC = () => {
                           setSettings(updated);
                           saveTVSettings(updated);
                         }}
-                        className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
-                          (settings.fontColorCycleSeconds ?? 8) === opt.sec
+                        className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${(settings.fontColorCycleSeconds ?? 8) === opt.sec
                             ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-sm'
                             : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
-                        }`}
+                          }`}
                       >
                         {opt.label}
                       </button>
