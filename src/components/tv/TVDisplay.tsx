@@ -160,6 +160,30 @@ export const TVDisplay: React.FC = () => {
   const [showAdminMenu, setShowAdminMenu] = useState(false);
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [audioReady, setAudioReady] = useState(false);
+  const [showLangMenu, setShowLangMenu] = useState(false);
+  const langMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close language menu on outside click or escape
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
+        setShowLangMenu(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowLangMenu(false);
+      }
+    };
+    if (showLangMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showLangMenu]);
 
   // Dynamic Font Color Theme Index
   const [fontThemeIndex, setFontThemeIndex] = useState(0);
@@ -410,14 +434,15 @@ export const TVDisplay: React.FC = () => {
     : basePrayers;
 
   const currentSlide = slidesList[slideIndex] || slidesList[0];
-  const announcementsList = settings.announcements && settings.announcements.length > 0
+  const rawAnnouncements = settings.announcements && settings.announcements.length > 0
     ? settings.announcements
     : [
-      "📢 Welcome to BIN FAIZAL'S Mosque Smart TV",
+      "Welcome to BIN FAIZAL'S Mosque Smart TV",
       "📵Please turn off or silence your mobile phones inside the Mosque.",
       "🤲 May Allah accept all our prayers and ibadah"
     ];
-  const announcementsStr = announcementsList.join('   ✦   ');
+  const announcementsList = rawAnnouncements.map((msg) => msg.replace(/^📢\s*/, ''));
+  const announcementsStr = announcementsList.join('                  ');
 
   const handleManualAudioUnlock = () => {
     unlockAudioContext().then(() => {
@@ -502,95 +527,174 @@ export const TVDisplay: React.FC = () => {
               <span>{settings.azanAudio.enabled ? (audioReady ? '🔊' : '🔔') : '🔇'}</span>
             </button>
 
-            {/* Language & Arabic Mode Options */}
-            <div className="flex items-center gap-1.5 bg-slate-900/85 border border-blue-500/30 p-1 rounded-2xl backdrop-blur-md shadow-lg">
-              {/* EN */}
+            {/* Multilingual Selector Dropdown */}
+            <div className="relative shrink-0" ref={langMenuRef}>
               <button
-                onClick={() => setLanguage('en')}
-                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
-                  lang === 'en'
-                    ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black scale-105'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                type="button"
+                onClick={() => setShowLangMenu((prev) => !prev)}
+                className={`p-2 rounded-xl text-base transition-all flex items-center justify-center border shadow-md shrink-0 hover:scale-105 ${
+                  showLangMenu
+                    ? 'bg-blue-600/90 border-sky-400 text-white shadow-sky-500/40 ring-2 ring-sky-400/50'
+                    : 'bg-slate-900/85 border-blue-500/30 text-sky-200 hover:border-sky-400/60 hover:text-white'
                 }`}
-                title="English Language"
+                title="Select Language & Arabic Numeral Options"
+                aria-label="Language options"
+                aria-expanded={showLangMenu}
               >
-                <span>🇬🇧</span>
-                <span>EN</span>
+                <span className="text-base leading-none">🌐</span>
               </button>
 
-              {/* Arabic Option 1: Arabic Words with Default 0-9 Numbers */}
-              <button
-                onClick={() => {
-                  const updated = {
-                    ...settings,
-                    language: 'ar' as LanguageCode,
-                    arabicNumerals: false,
-                    numeralSystem: 'western' as const
-                  };
-                  setSettings(updated);
-                  saveTVSettings(updated);
-                }}
-                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                  lang === 'ar' && !settings.arabicNumerals && settings.numeralSystem !== 'eastern_arabic'
-                    ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black scale-105 border border-sky-400/60'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
-                }`}
-                title="الخيار ١: نصوص عربية + أرقام عادية (0-9) - Arabic Sentences with Default Numbers"
-              >
-                <span>🇸🇦</span>
-                <span>عربي (0-9)</span>
-              </button>
+              {/* Dropdown Menu */}
+              {showLangMenu && (
+                <div className="absolute right-0 sm:left-0 sm:right-auto mt-2 w-72 bg-slate-950/95 border border-sky-500/40 rounded-2xl shadow-2xl backdrop-blur-xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="px-3 py-2 text-[11px] font-black uppercase tracking-wider text-sky-300 border-b border-slate-800/80 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <span>🌐</span>
+                      <span>{t('language') || 'Language'}</span>
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-semibold lowercase">5 options</span>
+                  </div>
 
-              {/* Arabic Option 2: Totally Arabic (Arabic Words + ٠-٩ Numerals for all times, azan, iqamath & countdown) */}
-              <button
-                onClick={() => {
-                  const updated = {
-                    ...settings,
-                    language: 'ar' as LanguageCode,
-                    arabicNumerals: true,
-                    numeralSystem: 'eastern_arabic' as const
-                  };
-                  setSettings(updated);
-                  saveTVSettings(updated);
-                }}
-                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                  lang === 'ar' && (settings.arabicNumerals || settings.numeralSystem === 'eastern_arabic')
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-md font-black scale-105 border border-emerald-400'
-                    : 'text-emerald-300 hover:text-white hover:bg-slate-800'
-                }`}
-                title="الخيار ٢: عربي كـامـل (نصوص عربية + أرقام شرقية ٠-٩ لجميع الأوقات والأذان والإقامة) - Totally Arabic Format (٠-٩)"
-              >
-                <span>✨</span>
-                <span>عربي كامل (٠-٩)</span>
-              </button>
+                  <div className="flex flex-col gap-1 mt-1.5">
+                    {/* 1. English */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLanguage('en');
+                        setShowLangMenu(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
+                        lang === 'en'
+                          ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black'
+                          : 'text-slate-200 hover:text-white hover:bg-slate-800/80'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-base">🇬🇧</span>
+                        <div>
+                          <div className="font-bold">English</div>
+                          <div className={`text-[10px] font-medium ${lang === 'en' ? 'text-sky-100' : 'text-slate-400'}`}>Standard English Display</div>
+                        </div>
+                      </div>
+                      {lang === 'en' && <span className="text-white font-black text-sm">✓</span>}
+                    </button>
 
-              {/* TA */}
-              <button
-                onClick={() => setLanguage('ta')}
-                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
-                  lang === 'ta'
-                    ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black scale-105'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
-                }`}
-                title="Tamil Language"
-              >
-                <span>🇱🇰</span>
-                <span className="hidden sm:inline">TA</span>
-              </button>
+                    {/* 2. Arabic Option 1: Arabic Words + Default 0-9 Numbers */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = {
+                          ...settings,
+                          language: 'ar' as LanguageCode,
+                          arabicNumerals: false,
+                          numeralSystem: 'western' as const
+                        };
+                        setSettings(updated);
+                        saveTVSettings(updated);
+                        setShowLangMenu(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
+                        lang === 'ar' && !settings.arabicNumerals && settings.numeralSystem !== 'eastern_arabic'
+                          ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black border border-sky-400/50'
+                          : 'text-slate-200 hover:text-white hover:bg-slate-800/80'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-base">🇸🇦</span>
+                        <div>
+                          <div className="font-bold font-arabic">عربي (0-9)</div>
+                          <div className={`text-[10px] font-medium ${lang === 'ar' && !settings.arabicNumerals && settings.numeralSystem !== 'eastern_arabic' ? 'text-sky-100' : 'text-slate-400'}`}>
+                            نصوص عربية + أرقام عادية
+                          </div>
+                        </div>
+                      </div>
+                      {lang === 'ar' && !settings.arabicNumerals && settings.numeralSystem !== 'eastern_arabic' && (
+                        <span className="text-white font-black text-sm">✓</span>
+                      )}
+                    </button>
 
-              {/* SI */}
-              <button
-                onClick={() => setLanguage('si')}
-                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
-                  lang === 'si'
-                    ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black scale-105'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
-                }`}
-                title="Sinhala Language"
-              >
-                <span>🇱🇰</span>
-                <span className="hidden sm:inline">SI</span>
-              </button>
+                    {/* 3. Arabic Option 2: Totally Arabic (Arabic Words + ٠-٩ Eastern Arabic Numerals) */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = {
+                          ...settings,
+                          language: 'ar' as LanguageCode,
+                          arabicNumerals: true,
+                          numeralSystem: 'eastern_arabic' as const
+                        };
+                        setSettings(updated);
+                        saveTVSettings(updated);
+                        setShowLangMenu(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
+                        lang === 'ar' && (settings.arabicNumerals || settings.numeralSystem === 'eastern_arabic')
+                          ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-md font-black border border-emerald-400/60'
+                          : 'text-emerald-300 hover:text-white hover:bg-slate-800/80'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-base">✨</span>
+                        <div>
+                          <div className="font-bold font-arabic">عربي كامل (٠-٩)</div>
+                          <div className={`text-[10px] font-medium ${lang === 'ar' && (settings.arabicNumerals || settings.numeralSystem === 'eastern_arabic') ? 'text-emerald-100' : 'text-emerald-400/80'}`}>
+                            أرقام ونصوص عربية كاملة
+                          </div>
+                        </div>
+                      </div>
+                      {lang === 'ar' && (settings.arabicNumerals || settings.numeralSystem === 'eastern_arabic') && (
+                        <span className="text-white font-black text-sm">✓</span>
+                      )}
+                    </button>
+
+                    {/* 4. Tamil */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLanguage('ta');
+                        setShowLangMenu(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
+                        lang === 'ta'
+                          ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black'
+                          : 'text-slate-200 hover:text-white hover:bg-slate-800/80'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-base">🇱🇰</span>
+                        <div>
+                          <div className="font-bold">தமிழ் (Tamil)</div>
+                          <div className={`text-[10px] font-medium ${lang === 'ta' ? 'text-sky-100' : 'text-slate-400'}`}>தமிழ் மொழி</div>
+                        </div>
+                      </div>
+                      {lang === 'ta' && <span className="text-white font-black text-sm">✓</span>}
+                    </button>
+
+                    {/* 5. Sinhala */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLanguage('si');
+                        setShowLangMenu(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
+                        lang === 'si'
+                          ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black'
+                          : 'text-slate-200 hover:text-white hover:bg-slate-800/80'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-base">🇱🇰</span>
+                        <div>
+                          <div className="font-bold">සිංහල (Sinhala)</div>
+                          <div className={`text-[10px] font-medium ${lang === 'si' ? 'text-sky-100' : 'text-slate-400'}`}>සිංහල භාෂාව</div>
+                        </div>
+                      </div>
+                      {lang === 'si' && <span className="text-white font-black text-sm">✓</span>}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -656,14 +760,22 @@ export const TVDisplay: React.FC = () => {
           </div>
         </header>
 
-        {/* Main Grid Area: 100% visible, No vertical scrolling, perfectly fitted */}
+        {/* Main Grid Area: 100% visible on TV / widescreen, beautifully responsive on mobile */}
         <main className="flex-1 min-h-0 flex flex-col my-1.5 overflow-hidden relative z-10">
+          {/* Mobile Portrait Landscape Mode Recommendation */}
+          <div className="md:hidden flex items-center justify-between bg-sky-950/80 border border-sky-400/30 px-3 py-1.5 rounded-xl mb-1.5 text-[11px] text-sky-200 shadow-md shrink-0">
+            <span className="flex items-center gap-1.5 font-bold">
+              <span>📱</span>
+              <span>For Smart TV view, rotate phone to <strong>Landscape mode 🔄</strong></span>
+            </span>
+          </div>
+
           {/* Special Prayer Scheduler Banner (Conditional) */}
           <SpecialPrayerBanner specialPrayers={settings.specialPrayers} />
 
-          <div className="grid grid-cols-12 gap-3 xl:gap-4 flex-1 min-h-0 items-stretch overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 sm:gap-3 xl:gap-4 flex-1 min-h-0 items-stretch overflow-y-auto lg:overflow-hidden">
             {/* Left Side: All 6 Daily Prayer Cards (Subah, Sunrise, Luhar, Asr, Maghrib, Isha) */}
-            <div className={`col-span-8 grid ${prayersList.length > 5 ? 'grid-cols-3 grid-rows-2' : 'grid-cols-5 grid-rows-1'} gap-2.5 sm:gap-3 xl:gap-3.5 h-full min-h-0`}>
+            <div className={`col-span-1 lg:col-span-8 grid ${prayersList.length > 5 ? 'grid-cols-3 grid-rows-2' : 'grid-cols-5 grid-rows-1'} gap-2 sm:gap-3 xl:gap-3.5 h-auto lg:h-full min-h-0`}>
               {prayersList.map((item) => {
                 const isSunrise = item.key === 'sunrise';
                 const isActive = prayerState.nextPrayer === item.key;
@@ -698,9 +810,6 @@ export const TVDisplay: React.FC = () => {
                     {isSunrise ? (
                       /* Sunrise Section: Centered, huge, bold time with ZERO Iqamath option */
                       <div className="flex-1 flex flex-col items-center justify-center my-0.5">
-                        <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-amber-300 block mb-0.5">
-                          🌅 {t('sunrise').toUpperCase()}
-                        </span>
                         <div className="text-3xl sm:text-4xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-black font-mono tracking-tight leading-none text-white drop-shadow-xl">
                           {formatDisplayTime(item.azan24)}
                         </div>
@@ -757,7 +866,7 @@ export const TVDisplay: React.FC = () => {
             </div>
 
             {/* Right Side: Hero Countdown + Optimized Info Boxes Below */}
-            <div className="col-span-4 h-full min-h-0 flex flex-col gap-2.5 sm:gap-3 justify-between">
+            <div className="col-span-1 lg:col-span-4 h-auto lg:h-full min-h-0 flex flex-col gap-2.5 sm:gap-3 justify-between">
               {/* Box 1: Countdown Hero Box with High-Contrast Shimmering Digits */}
               <div className="glass-card-hero p-3.5 sm:p-4 rounded-2xl flex flex-col items-center justify-center text-center relative overflow-hidden border border-sky-400/40 shadow-2xl flex-[1.2] min-h-0">
                 <div className={`absolute top-0 left-0 w-full h-1.5 transition-all duration-1000 ${activeFontTheme.cardActiveGlow} animate-pulse`} />
@@ -865,7 +974,7 @@ export const TVDisplay: React.FC = () => {
           <div className="overflow-hidden whitespace-nowrap flex-1 relative mask-fade-edges">
             <div className="inline-block animate-marquee text-xs sm:text-sm font-bold text-slate-100 tracking-wide">
               <span>{announcementsStr}</span>
-              <span className="mx-8">✦</span>
+              <span className="mx-16" />
               <span>{announcementsStr}</span>
             </div>
           </div>

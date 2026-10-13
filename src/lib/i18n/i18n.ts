@@ -39,11 +39,11 @@ export const HIJRI_MONTHS: Record<CanonicalLanguageCode, string[]> = {
 
 export const TRANSLATIONS: Record<CanonicalLanguageCode, Record<string, string>> = {
   en: {
-    fajr: "Subah / Fajr",
+    fajr: "Subah",
     sunrise: "Sunrise",
-    dhuhr: "Luhar / Dhuhr",
+    dhuhr: "Luhar",
     asr: "Asr",
-    maghrib: "Magrib / Maghrib",
+    maghrib: "Magrib",
     isha: "Isha",
     next: "Next",
     now: "Now",

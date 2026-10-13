@@ -228,7 +228,7 @@ export const DEFAULT_SETTINGS: TVSettings = {
   fontColorCycleSeconds: 8,
   fontColorTheme: 'royal-cycle',
   announcements: [
-    "📢 Welcome to BIN FAIZAL'S Mosque Smart TV",
+    "Welcome to BIN FAIZAL'S Mosque Smart TV",
     "📵Please turn off or silence your mobile phones inside the Mosque.",
     "🤲 May Allah accept all our prayers and ibadah"
   ],
@@ -316,9 +316,13 @@ export function getTVSettings(): TVSettings {
 
     // Migrate announcement to current requested text if old version was cached
     let announcements = Array.isArray(parsed.announcements) ? parsed.announcements : DEFAULT_SETTINGS.announcements;
-    announcements = announcements.map((a: string) =>
-      a.includes('inside the prayer hall') ? "📵Please turn off or silence your mobile phones inside the Mosque." : a
-    );
+    announcements = announcements.map((a: string) => {
+      let str = a.replace(/^📢\s*/, '');
+      if (str.includes('inside the prayer hall')) {
+        str = "📵Please turn off or silence your mobile phones inside the Mosque.";
+      }
+      return str;
+    });
 
     const rawAudio = parsed.azanAudio || {};
     const sanitizedAudio: AzanAudioSettings = {
