@@ -126,6 +126,8 @@ export interface TimeAdjustmentMinutes {
   isha: number;
 }
 
+export type NumeralSystem = 'western' | 'eastern_arabic' | 'roman';
+
 export interface TVSettings {
   language: LanguageCode;
   autoCycleLanguages: boolean;
@@ -152,6 +154,7 @@ export interface TVSettings {
   fontColorCycleSeconds?: number;
   fontColorTheme?: string;
   arabicNumerals?: boolean;
+  numeralSystem?: NumeralSystem;
 }
 
 export const DEFAULT_SETTINGS: TVSettings = {
@@ -171,6 +174,7 @@ export const DEFAULT_SETTINGS: TVSettings = {
   tarawihEnabled: false,
   phoneSilentAlertEnabled: true,
   arabicNumerals: false,
+  numeralSystem: 'western',
   mosqueName: "MOHIDHEEN THAIKKA MOSQUE",
   brandTitle: "BIN FAIZAL'S",
   subtitle: "Mosque Services",
@@ -330,9 +334,17 @@ export function getTVSettings(): TVSettings {
       iqamahAlertEnabled: rawAudio.iqamahAlertEnabled !== false,
     };
 
+    const numeralSystem: NumeralSystem = parsed.numeralSystem
+      ? parsed.numeralSystem
+      : parsed.arabicNumerals
+        ? 'eastern_arabic'
+        : 'western';
+
     return {
       ...DEFAULT_SETTINGS,
       ...parsed,
+      arabicNumerals: numeralSystem === 'eastern_arabic',
+      numeralSystem,
       announcements,
       background: {
         ...DEFAULT_SETTINGS.background,

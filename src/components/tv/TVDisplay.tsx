@@ -36,7 +36,15 @@ import {
   clearOldPrayerAlerts
 } from '@/lib/audio/azanAudioEngine';
 import { fetchLiveWeather, WeatherData } from '@/lib/weather/weatherEngine';
-import { getTranslation, formatLocalizedDate, toEasternArabicNumerals, LANGUAGES, LanguageCode } from '@/lib/i18n/i18n';
+import {
+  getTranslation,
+  formatLocalizedDate,
+  toEasternArabicNumerals,
+  toRomanNumerals,
+  formatWithNumeralSystem,
+  LANGUAGES,
+  LanguageCode
+} from '@/lib/i18n/i18n';
 
 // 5 Harmonic Luxury Font Color Themes connecting with Royal Mosque background
 export interface FontTheme {
@@ -347,25 +355,24 @@ export const TVDisplay: React.FC = () => {
     const mins = Math.floor((sec % 3600) / 60);
     const secs = sec % 60;
     const raw = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    return (lang === 'ar' && settings.arabicNumerals) ? toEasternArabicNumerals(raw) : raw;
+    return formatWithNumeralSystem(raw, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
   };
 
   const formatDisplayTime = (timeStr?: string) => {
     if (!timeStr) return '--:--';
     const formatted = settings.time24Format ? timeStr : formatTo12Hour(timeStr);
-    return (lang === 'ar' && settings.arabicNumerals) ? toEasternArabicNumerals(formatted) : formatted;
+    return formatWithNumeralSystem(formatted, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
   };
 
   const computeIqamahTimeStr = (
     prayerKey: keyof typeof settings.iqamahOffsets,
     azanTimeStr?: string
   ): { formatted: string; offsetLabel: string } => {
-    const isArNumerals = lang === 'ar' && settings.arabicNumerals;
     const customTime = settings.customIqamahTimes?.[prayerKey as keyof typeof settings.customIqamahTimes];
     if (customTime && customTime.trim() !== '') {
       const base = settings.time24Format ? customTime : formatTo12Hour(customTime);
       return {
-        formatted: isArNumerals ? toEasternArabicNumerals(base) : base,
+        formatted: formatWithNumeralSystem(base, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false),
         offsetLabel: lang === 'ar' ? 'يدوي' : 'Manual'
       };
     }
@@ -377,8 +384,8 @@ export const TVDisplay: React.FC = () => {
     const offsetTxt = lang === 'ar' ? `+${offsetMin}د` : `+${offsetMin}m`;
 
     return {
-      formatted: isArNumerals ? toEasternArabicNumerals(base) : base,
-      offsetLabel: isArNumerals ? toEasternArabicNumerals(offsetTxt) : offsetTxt
+      formatted: formatWithNumeralSystem(base, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false),
+      offsetLabel: formatWithNumeralSystem(offsetTxt, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false)
     };
   };
 
@@ -499,37 +506,95 @@ export const TVDisplay: React.FC = () => {
               </span>
             </button>
 
-            {/* 4 Languages Selector */}
-            <div className="flex items-center gap-1 bg-slate-900/80 border border-blue-500/30 px-2 py-1 rounded-xl backdrop-blur-md">
-              {LANGUAGES.map((l) => (
-                <button
-                  key={l.code}
-                  onClick={() => setLanguage(l.code)}
-                  className={`px-2 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${lang === l.code
-                      ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black scale-105'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
-                    }`}
-                  title={l.label}
-                >
-                  <span>{l.flag}</span>
-                  <span className="hidden sm:inline">{l.code.toUpperCase()}</span>
-                </button>
-              ))}
+            {/* Language & Arabic Mode Options */}
+            <div className="flex items-center gap-1.5 bg-slate-900/85 border border-blue-500/30 p-1 rounded-2xl backdrop-blur-md shadow-lg">
+              {/* EN */}
+              <button
+                onClick={() => setLanguage('en')}
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
+                  lang === 'en'
+                    ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black scale-105'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
+                title="English Language"
+              >
+                <span>🇬🇧</span>
+                <span>EN</span>
+              </button>
 
-              {/* Arabic Numerals Quick Toggle (when Arabic is active) */}
-              {lang === 'ar' && (
-                <button
-                  onClick={() => {
-                    const updated = { ...settings, arabicNumerals: !settings.arabicNumerals };
-                    setSettings(updated);
-                    saveTVSettings(updated);
-                  }}
-                  className="px-2 py-0.5 rounded-lg text-xs font-black bg-blue-950 hover:bg-blue-900 border border-sky-400/50 text-sky-200 transition-all ml-1 shadow-sm"
-                  title={settings.arabicNumerals ? "تبديل إلى الأرقام الافتراضية (0-9)" : "تبديل إلى الأرقام الشرقية (٠-٩)"}
-                >
-                  {settings.arabicNumerals ? '٠١٢٣' : '0123'}
-                </button>
-              )}
+              {/* Arabic Option 1: Arabic Words with Default 0-9 Numbers */}
+              <button
+                onClick={() => {
+                  const updated = {
+                    ...settings,
+                    language: 'ar' as LanguageCode,
+                    arabicNumerals: false,
+                    numeralSystem: 'western' as const
+                  };
+                  setSettings(updated);
+                  saveTVSettings(updated);
+                }}
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  lang === 'ar' && !settings.arabicNumerals && settings.numeralSystem !== 'eastern_arabic'
+                    ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black scale-105 border border-sky-400/60'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
+                title="الخيار ١: نصوص عربية + أرقام عادية (0-9) - Arabic Sentences with Default Numbers"
+              >
+                <span>🇸🇦</span>
+                <span>عربي (0-9)</span>
+              </button>
+
+              {/* Arabic Option 2: Totally Arabic (Arabic Words + ٠-٩ Numerals for all times, azan, iqamath & countdown) */}
+              <button
+                onClick={() => {
+                  const updated = {
+                    ...settings,
+                    language: 'ar' as LanguageCode,
+                    arabicNumerals: true,
+                    numeralSystem: 'eastern_arabic' as const
+                  };
+                  setSettings(updated);
+                  saveTVSettings(updated);
+                }}
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  lang === 'ar' && (settings.arabicNumerals || settings.numeralSystem === 'eastern_arabic')
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-md font-black scale-105 border border-emerald-400'
+                    : 'text-emerald-300 hover:text-white hover:bg-slate-800'
+                }`}
+                title="الخيار ٢: عربي كـامـل (نصوص عربية + أرقام شرقية ٠-٩ لجميع الأوقات والأذان والإقامة) - Totally Arabic Format (٠-٩)"
+              >
+                <span>✨</span>
+                <span>عربي كامل (٠-٩)</span>
+              </button>
+
+              {/* TA */}
+              <button
+                onClick={() => setLanguage('ta')}
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
+                  lang === 'ta'
+                    ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black scale-105'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
+                title="Tamil Language"
+              >
+                <span>🇱🇰</span>
+                <span className="hidden sm:inline">TA</span>
+              </button>
+
+              {/* SI */}
+              <button
+                onClick={() => setLanguage('si')}
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1 ${
+                  lang === 'si'
+                    ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black scale-105'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
+                title="Sinhala Language"
+              >
+                <span>🇱🇰</span>
+                <span className="hidden sm:inline">SI</span>
+              </button>
             </div>
           </div>
 
@@ -551,8 +616,8 @@ export const TVDisplay: React.FC = () => {
           )}
 
           {/* Live Clock & Dates */}
-          <div className="text-right flex items-center gap-3 sm:gap-5">
-            <div className={`text-2xl sm:text-4xl lg:text-5xl font-black font-mono tracking-tight leading-none transition-all duration-1000 ${activeFontTheme.clockGlow}`}>
+          <div className="text-right flex items-center gap-3 sm:gap-4 shrink-0">
+            <div className={`text-3xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-black font-mono tracking-tight leading-none transition-all duration-1000 whitespace-nowrap drop-shadow-[0_0_25px_rgba(56,189,248,0.7)] ${activeFontTheme.clockGlow}`}>
               {mounted
                 ? (() => {
                     const raw = time.toLocaleTimeString('en-US', {
@@ -561,14 +626,25 @@ export const TVDisplay: React.FC = () => {
                       second: '2-digit',
                       hour12: !settings.time24Format
                     });
-                    return (lang === 'ar' && settings.arabicNumerals) ? toEasternArabicNumerals(raw) : raw;
+                    return formatWithNumeralSystem(
+                      raw,
+                      settings.numeralSystem,
+                      lang === 'ar',
+                      settings.arabicNumerals ?? false
+                    );
                   })()
                 : '--:--:--'}
             </div>
             <div className="h-8 w-px bg-slate-700/60 hidden sm:block" />
             <div className="text-right hidden sm:block">
               <div className="text-[11px] sm:text-xs font-bold text-slate-200 uppercase tracking-wide">
-                {mounted ? formatLocalizedDate(time, lang, settings.arabicNumerals ?? false) : '---'}
+                {mounted
+                  ? formatLocalizedDate(
+                      time,
+                      lang,
+                      settings.numeralSystem || (lang === 'ar' && settings.arabicNumerals ? 'eastern_arabic' : 'western')
+                    )
+                  : '---'}
               </div>
               <div className={`text-xs sm:text-sm font-arabic font-bold mt-0.5 transition-colors duration-1000 ${activeFontTheme.accentText}`}>
                 {mounted ? hijriDateStr : '---'}
@@ -971,44 +1047,74 @@ export const TVDisplay: React.FC = () => {
                 </div>
               </div>
 
-              {/* Arabic Numerals Setting: Eastern Arabic vs Default Numbers */}
+              {/* Numeral System & Arabic Format Setting */}
               <div className="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800">
                 <div className="flex justify-between items-center mb-2">
                   <label className="text-xs font-bold text-slate-300 uppercase">
-                    {t('numeralFormat')} (Arabic Mode)
+                    {t('numeralFormat')} / Numeral System
                   </label>
                   <span className="text-[11px] font-mono text-sky-300 font-bold">
-                    {settings.arabicNumerals ? 'الأرقام الشرقية (٠-٩)' : 'Default (0-9)'}
+                    {settings.numeralSystem === 'roman'
+                      ? 'Roman Numerals (I, II, III)'
+                      : (settings.numeralSystem === 'eastern_arabic' || settings.arabicNumerals)
+                        ? 'Eastern Arabic (٠-٩)'
+                        : 'Default Western (0-9)'}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => {
-                      const updated = { ...settings, arabicNumerals: false };
+                      const updated = {
+                        ...settings,
+                        numeralSystem: 'western' as const,
+                        arabicNumerals: false
+                      };
                       setSettings(updated);
                       saveTVSettings(updated);
                     }}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all ${
-                      !settings.arabicNumerals
+                    className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all text-center ${
+                      settings.numeralSystem !== 'roman' && !settings.arabicNumerals && settings.numeralSystem !== 'eastern_arabic'
                         ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white font-black shadow-md'
                         : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
                     }`}
                   >
-                    {t('defaultNumbers')}
+                    123 Default (0-9)
                   </button>
                   <button
                     onClick={() => {
-                      const updated = { ...settings, arabicNumerals: true };
+                      const updated = {
+                        ...settings,
+                        numeralSystem: 'eastern_arabic' as const,
+                        arabicNumerals: true
+                      };
                       setSettings(updated);
                       saveTVSettings(updated);
                     }}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold transition-all ${
-                      settings.arabicNumerals
-                        ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white font-black shadow-md'
+                    className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all text-center ${
+                      settings.numeralSystem === 'eastern_arabic' || settings.arabicNumerals
+                        ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-black shadow-md'
                         : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
                     }`}
                   >
-                    {t('arabicNumbers')}
+                    ٠١٢٣ شرقية (٠-٩)
+                  </button>
+                  <button
+                    onClick={() => {
+                      const updated = {
+                        ...settings,
+                        numeralSystem: 'roman' as const,
+                        arabicNumerals: false
+                      };
+                      setSettings(updated);
+                      saveTVSettings(updated);
+                    }}
+                    className={`py-2 px-2.5 rounded-xl text-xs font-bold transition-all text-center ${
+                      settings.numeralSystem === 'roman'
+                        ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white font-black shadow-md'
+                        : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                    }`}
+                  >
+                    🏛️ Roman (I, II, III)
                   </button>
                 </div>
               </div>

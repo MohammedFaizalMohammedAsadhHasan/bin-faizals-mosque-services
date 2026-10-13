@@ -8,7 +8,7 @@ import { AmbientBubbles } from '@/components/ui/AmbientBubbles';
 import { resolvePrayerTimesAsync, resolvePrayerState, formatTo12Hour, PrayerTimes, PrayerState } from '@/lib/prayer/prayerEngine';
 import { getFormattedHijriDate } from '@/lib/prayer/hijriEngine';
 import { getTVSettings, saveTVSettings, SRI_LANKA_ZONES } from '@/lib/settings/settingsManager';
-import { LanguageCode, getTranslation, formatLocalizedDate, toEasternArabicNumerals, LANGUAGES } from '@/lib/i18n/i18n';
+import { LanguageCode, getTranslation, formatLocalizedDate, toEasternArabicNumerals, formatWithNumeralSystem, LANGUAGES } from '@/lib/i18n/i18n';
 
 export default function PublicHomePage() {
   const [showSplash, setShowSplash] = useState(true);
@@ -20,6 +20,7 @@ export default function PublicHomePage() {
   const [time24Format, setTime24Format] = useState(false);
   const [zoneLabel, setZoneLabel] = useState('Zone 01');
   const [arabicNumerals, setArabicNumerals] = useState(false);
+  const [numeralSystem, setNumeralSystem] = useState<'western' | 'eastern_arabic' | 'roman'>('western');
 
   useEffect(() => {
     setMounted(true);
@@ -29,6 +30,7 @@ export default function PublicHomePage() {
     }
     setTime24Format(settings.time24Format ?? false);
     setArabicNumerals(settings.arabicNumerals ?? false);
+    setNumeralSystem(settings.numeralSystem || (settings.arabicNumerals ? 'eastern_arabic' : 'western'));
     const z = SRI_LANKA_ZONES.find((item) => item.id === settings.selectedZoneId);
     if (z) setZoneLabel(z.name);
   }, []);
@@ -67,13 +69,13 @@ export default function PublicHomePage() {
     const mins = Math.floor((sec % 3600) / 60);
     const secs = sec % 60;
     const raw = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    return currentLang === 'ar' && arabicNumerals ? toEasternArabicNumerals(raw) : raw;
+    return formatWithNumeralSystem(raw, numeralSystem, currentLang === 'ar', arabicNumerals);
   };
 
   const formatPrayerTime = (timeStr?: string) => {
     if (!timeStr) return '-';
     const formatted = time24Format ? timeStr : formatTo12Hour(timeStr);
-    return currentLang === 'ar' && arabicNumerals ? toEasternArabicNumerals(formatted) : formatted;
+    return formatWithNumeralSystem(formatted, numeralSystem, currentLang === 'ar', arabicNumerals);
   };
 
   const getPrayerName = (prayerKey: string) => {
@@ -127,21 +129,46 @@ export default function PublicHomePage() {
                 })}
               </div>
 
-              {/* Eastern Arabic Numerals Toggle (Appears when Arabic language is selected) */}
+              {/* Arabic Dual Options (Appears when Arabic language is selected) */}
               {currentLang === 'ar' && (
-                <button
-                  onClick={() => {
-                    const next = !arabicNumerals;
-                    setArabicNumerals(next);
-                    const s = getTVSettings();
-                    s.arabicNumerals = next;
-                    saveTVSettings(s);
-                  }}
-                  className="px-3 py-1.5 rounded-xl bg-slate-900 border border-sky-400/40 text-sky-300 text-xs font-black tracking-wider hover:bg-slate-800 transition-all shadow-md"
-                  title="تبديل الأرقام بين الشرقية (٠-٩) والافتراضية (0-9)"
-                >
-                  {arabicNumerals ? 'الأرقام: ٠١٢٣' : 'الأرقام: 0123'}
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => {
+                      setArabicNumerals(false);
+                      setNumeralSystem('western');
+                      const s = getTVSettings();
+                      s.arabicNumerals = false;
+                      s.numeralSystem = 'western';
+                      saveTVSettings(s);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black tracking-wider transition-all shadow-md ${
+                      !arabicNumerals && numeralSystem !== 'eastern_arabic'
+                        ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white border border-sky-400'
+                        : 'bg-slate-900 border border-slate-700 text-slate-400 hover:text-white'
+                    }`}
+                    title="الخيار ١: نصوص عربية + أرقام عادية (0-9)"
+                  >
+                    عربي (0-9)
+                  </button>
+                  <button
+                    onClick={() => {
+                      setArabicNumerals(true);
+                      setNumeralSystem('eastern_arabic');
+                      const s = getTVSettings();
+                      s.arabicNumerals = true;
+                      s.numeralSystem = 'eastern_arabic';
+                      saveTVSettings(s);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black tracking-wider transition-all shadow-md ${
+                      arabicNumerals || numeralSystem === 'eastern_arabic'
+                        ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white border border-emerald-400'
+                        : 'bg-slate-900 border border-slate-700 text-emerald-300 hover:text-white'
+                    }`}
+                    title="الخيار ٢: عربي كامل (٠-٩)"
+                  >
+                    عربي كامل (٠-٩)
+                  </button>
+                </div>
               )}
 
               <div className="hidden sm:flex gap-2">

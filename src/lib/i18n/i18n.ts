@@ -176,6 +176,50 @@ export const TRANSLATIONS: Record<CanonicalLanguageCode, Record<string, string>>
   },
 };
 
+export function intToRoman(num: number): string {
+  if (num <= 0) return '0';
+  const lookup: [number, string][] = [
+    [1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'],
+    [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
+    [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
+  ];
+  let result = '';
+  for (const [val, roman] of lookup) {
+    while (num >= val) {
+      result += roman;
+      num -= val;
+    }
+  }
+  return result;
+}
+
+export function toRomanNumerals(str: string | number): string {
+  if (str === null || str === undefined) return '';
+  const s = String(str);
+  return s.replace(/\b(\d+)\b/g, (match) => {
+    const val = parseInt(match, 10);
+    if (isNaN(val)) return match;
+    if (val === 0) return '0';
+    return intToRoman(val);
+  });
+}
+
+export function formatWithNumeralSystem(
+  val: string | number,
+  system?: 'western' | 'eastern_arabic' | 'roman',
+  isArabicLang?: boolean,
+  arabicNumeralsFlag?: boolean
+): string {
+  const str = String(val ?? '');
+  if (system === 'roman') {
+    return toRomanNumerals(str);
+  }
+  if (system === 'eastern_arabic' || (isArabicLang && Boolean(arabicNumeralsFlag))) {
+    return toEasternArabicNumerals(str);
+  }
+  return str;
+}
+
 export function toEasternArabicNumerals(str: string | number): string {
   if (str === null || str === undefined) return '';
   const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
@@ -191,7 +235,7 @@ export function getTranslation(lang: LanguageCode, key: string): string {
 /**
  * Returns localized Gregorian Date string (e.g., "Monday, 12 October 2026" in selected language)
  */
-export function formatLocalizedDate(date: Date, lang: LanguageCode, useEasternDigits: boolean = false): string {
+export function formatLocalizedDate(date: Date, lang: LanguageCode, numeralMode: 'western' | 'eastern_arabic' | 'roman' | boolean = false): string {
   const norm = (lang ? String(lang).toLowerCase() : 'en') as CanonicalLanguageCode;
   const dayName = DAYS_OF_WEEK[norm]?.[date.getDay()] ?? DAYS_OF_WEEK.en[date.getDay()];
   const monthName = GREGORIAN_MONTHS[norm]?.[date.getMonth()] ?? GREGORIAN_MONTHS.en[date.getMonth()];
@@ -209,8 +253,12 @@ export function formatLocalizedDate(date: Date, lang: LanguageCode, useEasternDi
     formatted = `${dayName}, ${monthName} ${dayNum}, ${yearNum}`;
   }
 
-  if (norm === 'ar' && useEasternDigits) {
+  if (numeralMode === 'roman') {
+    return toRomanNumerals(formatted);
+  }
+  if (numeralMode === 'eastern_arabic' || (norm === 'ar' && numeralMode === true)) {
     return toEasternArabicNumerals(formatted);
   }
   return formatted;
 }
+

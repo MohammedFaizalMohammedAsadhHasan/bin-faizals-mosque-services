@@ -167,6 +167,80 @@ export default function AdminPage() {
                 </select>
 
                 <div className="flex flex-col gap-2 pt-1">
+                  {/* Numeral System Selection */}
+                  <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800">
+                    <label className="block text-xs font-bold text-sky-400 uppercase mb-2">
+                      🔢 Numeral System (Numbers Display)
+                    </label>
+                    <select
+                      value={settings.numeralSystem || (settings.arabicNumerals ? 'eastern_arabic' : 'western')}
+                      onChange={(e) => {
+                        const val = e.target.value as any;
+                        setSettings({
+                          ...settings,
+                          numeralSystem: val,
+                          arabicNumerals: val === 'eastern_arabic'
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-100 text-xs font-bold focus:border-sky-400 focus:outline-none cursor-pointer mb-2"
+                    >
+                      <option value="western">123 Standard / Western Numerals (0-9)</option>
+                      <option value="eastern_arabic">٠١٢٣ Eastern Arabic Numerals (٠-٩)</option>
+                      <option value="roman">🏛️ Roman Numerals (I, II, III, IV, V...)</option>
+                    </select>
+                    <p className="text-[11px] text-slate-400 leading-tight">
+                      Controls number format across live clock, countdown timer, Azan and Iqamath times.
+                    </p>
+                  </div>
+
+                  {/* Arabic Display Modes (2 Options) */}
+                  <div className="bg-slate-950/80 p-3.5 rounded-xl border border-emerald-500/30">
+                    <label className="block text-xs font-bold text-emerald-400 uppercase mb-2">
+                      🇸🇦 Arabic Language Display Formats
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSettings({
+                            ...settings,
+                            language: 'ar',
+                            arabicNumerals: false,
+                            numeralSystem: 'western'
+                          });
+                        }}
+                        className={`p-2.5 rounded-lg border text-left transition-all ${
+                          settings.language === 'ar' && !settings.arabicNumerals && settings.numeralSystem !== 'eastern_arabic'
+                            ? 'bg-emerald-950/90 border-emerald-400 text-white shadow-md'
+                            : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <div className="font-bold text-xs text-emerald-300">الخيار ١: عربي (0-9)</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">نصوص عربية مع أرقام عادية (0-9)</div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSettings({
+                            ...settings,
+                            language: 'ar',
+                            arabicNumerals: true,
+                            numeralSystem: 'eastern_arabic'
+                          });
+                        }}
+                        className={`p-2.5 rounded-lg border text-left transition-all ${
+                          settings.language === 'ar' && (settings.arabicNumerals || settings.numeralSystem === 'eastern_arabic')
+                            ? 'bg-emerald-950/90 border-emerald-400 text-white shadow-md'
+                            : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <div className="font-bold text-xs text-emerald-300">الخيار ٢: عربي كامل (٠-٩)</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">نصوص وأرقام شرقية لكافة الأوقات</div>
+                      </button>
+                    </div>
+                  </div>
+
                   <label className="flex items-center gap-2 cursor-pointer bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">
                     <input
                       type="checkbox"
@@ -176,18 +250,6 @@ export default function AdminPage() {
                     />
                     <span className="text-xs font-semibold text-slate-200">
                       🔄 Auto-cycle all 4 languages on TV (every 15s)
-                    </span>
-                  </label>
-
-                  <label className="flex items-center gap-2 cursor-pointer bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">
-                    <input
-                      type="checkbox"
-                      checked={settings.arabicNumerals ?? false}
-                      onChange={(e) => setSettings({ ...settings, arabicNumerals: e.target.checked })}
-                      className="w-4 h-4 accent-sky-400 cursor-pointer"
-                    />
-                    <span className="text-xs font-semibold text-slate-200">
-                      🇸🇦 Eastern Arabic Numerals (الأرقام الشرقية ٠-٩) in Arabic Mode
                     </span>
                   </label>
 
@@ -471,6 +533,30 @@ export default function AdminPage() {
             <h2 className="text-xl font-bold text-sky-400 mb-2">
               Automatic Voice Alerts: Azan &amp; Iqamath Audio Management
             </h2>
+
+            {/* Audio Source Reference Box */}
+            <div className="bg-gradient-to-r from-blue-950/70 via-sky-950/60 to-slate-900 border border-sky-400/40 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shadow-lg">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🕌</span>
+                  <span className="font-bold text-white text-sm">
+                    Authentic Voice Reference: Madinah Riaz Ul Jannah Melodious Azan &amp; Congregational Iqamath
+                  </span>
+                </div>
+                <p className="text-xs text-sky-200/80 mt-1">
+                  Extracted from requested YouTube Shorts reference video and packaged in 192kbps high definition.
+                </p>
+              </div>
+              <a
+                href="https://youtube.com/shorts/yd9y2Bqq5JM?si=QTU97n4gAl6_TbYa"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-1.5 rounded-xl bg-red-600/90 hover:bg-red-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow shrink-0"
+              >
+                <span>▶</span>
+                <span>Open YouTube Ref</span>
+              </a>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-950 p-5 rounded-2xl border border-slate-800">
               <label className="flex items-center gap-3 cursor-pointer">
