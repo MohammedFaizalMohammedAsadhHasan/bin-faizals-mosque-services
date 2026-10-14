@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import {
   resolvePrayerState,
@@ -161,12 +162,45 @@ export const TVDisplay: React.FC = () => {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [audioReady, setAudioReady] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [dropdownCoords, setDropdownCoords] = useState<{ top: number; left: number } | null>(null);
   const langMenuRef = useRef<HTMLDivElement>(null);
+  const langButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Close language menu on outside click or escape
+  const toggleLangMenu = () => {
+    if (!showLangMenu && langButtonRef.current) {
+      const rect = langButtonRef.current.getBoundingClientRect();
+      const isMobile = window.innerWidth < 640;
+      if (isMobile) {
+        setDropdownCoords({
+          top: rect.bottom + 8,
+          left: Math.max(16, (window.innerWidth - 320) / 2)
+        });
+      } else {
+        const dropdownWidth = 320;
+        let left = rect.left;
+        if (left + dropdownWidth > window.innerWidth - 16) {
+          left = window.innerWidth - dropdownWidth - 16;
+        }
+        if (left < 16) left = 16;
+        setDropdownCoords({
+          top: rect.bottom + 8,
+          left: left
+        });
+      }
+    }
+    setShowLangMenu((prev) => !prev);
+  };
+
+  // Close language menu on outside click or escape, and update position on resize
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        langMenuRef.current &&
+        !langMenuRef.current.contains(target) &&
+        langButtonRef.current &&
+        !langButtonRef.current.contains(target)
+      ) {
         setShowLangMenu(false);
       }
     };
@@ -175,13 +209,38 @@ export const TVDisplay: React.FC = () => {
         setShowLangMenu(false);
       }
     };
+    const handleResize = () => {
+      if (showLangMenu && langButtonRef.current) {
+        const rect = langButtonRef.current.getBoundingClientRect();
+        const isMobile = window.innerWidth < 640;
+        if (isMobile) {
+          setDropdownCoords({
+            top: rect.bottom + 8,
+            left: Math.max(16, (window.innerWidth - 320) / 2)
+          });
+        } else {
+          const dropdownWidth = 320;
+          let left = rect.left;
+          if (left + dropdownWidth > window.innerWidth - 16) {
+            left = window.innerWidth - dropdownWidth - 16;
+          }
+          if (left < 16) left = 16;
+          setDropdownCoords({
+            top: rect.bottom + 8,
+            left: left
+          });
+        }
+      }
+    };
     if (showLangMenu) {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('resize', handleResize);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('resize', handleResize);
     };
   }, [showLangMenu]);
 
@@ -527,11 +586,12 @@ export const TVDisplay: React.FC = () => {
               <span>{settings.azanAudio.enabled ? (audioReady ? '🔊' : '🔔') : '🔇'}</span>
             </button>
 
-            {/* Multilingual Selector Dropdown */}
-            <div className="relative shrink-0 z-50" ref={langMenuRef}>
+            {/* Multilingual Selector Button */}
+            <div className="relative shrink-0">
               <button
+                ref={langButtonRef}
                 type="button"
-                onClick={() => setShowLangMenu((prev) => !prev)}
+                onClick={toggleLangMenu}
                 className={`p-2 rounded-xl text-base transition-all flex items-center justify-center border shadow-md shrink-0 hover:scale-105 ${
                   showLangMenu
                     ? 'bg-blue-600/90 border-sky-400 text-white shadow-sky-500/40 ring-2 ring-sky-400/50'
@@ -543,165 +603,6 @@ export const TVDisplay: React.FC = () => {
               >
                 <span className="text-base leading-none">🌐</span>
               </button>
-
-              {/* Dropdown Menu */}
-              {showLangMenu && (
-                <>
-                  {/* Backdrop overlay for mobile & easy click-away */}
-                  <div
-                    className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[1px] sm:hidden"
-                    onClick={() => setShowLangMenu(false)}
-                  />
-
-                  <div className="fixed left-3 right-3 top-16 max-w-xs mx-auto sm:max-w-none sm:mx-0 sm:absolute sm:left-0 sm:right-auto sm:top-full sm:mt-2 sm:w-72 bg-slate-950/98 border border-sky-400/60 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl p-2.5 z-50 animate-in fade-in zoom-in-95 duration-150">
-                    <div className="px-3 py-2 text-[11px] font-black uppercase tracking-wider text-sky-300 border-b border-slate-800/80 flex items-center justify-between">
-                      <span className="flex items-center gap-1.5">
-                        <span>🌐</span>
-                        <span>{t('language') || 'Language'}</span>
-                      </span>
-                    </div>
-
-                  <div className="flex flex-col gap-1 mt-1.5">
-                    {/* 1. English */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLanguage('en');
-                        setShowLangMenu(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
-                        lang === 'en'
-                          ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black'
-                          : 'text-slate-200 hover:text-white hover:bg-slate-800/80'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-base">🇬🇧</span>
-                        <div>
-                          <div className="font-bold">English</div>
-                          <div className={`text-[10px] font-medium ${lang === 'en' ? 'text-sky-100' : 'text-slate-400'}`}>Standard English Display</div>
-                        </div>
-                      </div>
-                      {lang === 'en' && <span className="text-white font-black text-sm">✓</span>}
-                    </button>
-
-                    {/* 2. Arabic Option 1: Arabic Words + Default 0-9 Numbers */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const updated = {
-                          ...settings,
-                          language: 'ar' as LanguageCode,
-                          arabicNumerals: false,
-                          numeralSystem: 'western' as const
-                        };
-                        setSettings(updated);
-                        saveTVSettings(updated);
-                        setShowLangMenu(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
-                        lang === 'ar' && !settings.arabicNumerals && settings.numeralSystem !== 'eastern_arabic'
-                          ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black border border-sky-400/50'
-                          : 'text-slate-200 hover:text-white hover:bg-slate-800/80'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-base">🇸🇦</span>
-                        <div>
-                          <div className="font-bold font-arabic">عربي (0-9)</div>
-                          <div className={`text-[10px] font-medium ${lang === 'ar' && !settings.arabicNumerals && settings.numeralSystem !== 'eastern_arabic' ? 'text-sky-100' : 'text-slate-400'}`}>
-                            نصوص عربية + أرقام عادية
-                          </div>
-                        </div>
-                      </div>
-                      {lang === 'ar' && !settings.arabicNumerals && settings.numeralSystem !== 'eastern_arabic' && (
-                        <span className="text-white font-black text-sm">✓</span>
-                      )}
-                    </button>
-
-                    {/* 3. Arabic Option 2: Totally Arabic (Arabic Words + ٠-٩ Eastern Arabic Numerals) */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const updated = {
-                          ...settings,
-                          language: 'ar' as LanguageCode,
-                          arabicNumerals: true,
-                          numeralSystem: 'eastern_arabic' as const
-                        };
-                        setSettings(updated);
-                        saveTVSettings(updated);
-                        setShowLangMenu(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
-                        lang === 'ar' && (settings.arabicNumerals || settings.numeralSystem === 'eastern_arabic')
-                          ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-md font-black border border-emerald-400/60'
-                          : 'text-emerald-300 hover:text-white hover:bg-slate-800/80'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-base">✨</span>
-                        <div>
-                          <div className="font-bold font-arabic">عربي كامل (٠-٩)</div>
-                          <div className={`text-[10px] font-medium ${lang === 'ar' && (settings.arabicNumerals || settings.numeralSystem === 'eastern_arabic') ? 'text-emerald-100' : 'text-emerald-400/80'}`}>
-                            أرقام ونصوص عربية كاملة
-                          </div>
-                        </div>
-                      </div>
-                      {lang === 'ar' && (settings.arabicNumerals || settings.numeralSystem === 'eastern_arabic') && (
-                        <span className="text-white font-black text-sm">✓</span>
-                      )}
-                    </button>
-
-                    {/* 4. Tamil */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLanguage('ta');
-                        setShowLangMenu(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
-                        lang === 'ta'
-                          ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black'
-                          : 'text-slate-200 hover:text-white hover:bg-slate-800/80'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-base">🇱🇰</span>
-                        <div>
-                          <div className="font-bold">தமிழ் (Tamil)</div>
-                          <div className={`text-[10px] font-medium ${lang === 'ta' ? 'text-sky-100' : 'text-slate-400'}`}>தமிழ் மொழி</div>
-                        </div>
-                      </div>
-                      {lang === 'ta' && <span className="text-white font-black text-sm">✓</span>}
-                    </button>
-
-                    {/* 5. Sinhala */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLanguage('si');
-                        setShowLangMenu(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
-                        lang === 'si'
-                          ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black'
-                          : 'text-slate-200 hover:text-white hover:bg-slate-800/80'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-base">🇱🇰</span>
-                        <div>
-                          <div className="font-bold">සිංහල (Sinhala)</div>
-                          <div className={`text-[10px] font-medium ${lang === 'si' ? 'text-sky-100' : 'text-slate-400'}`}>සිංහල භාෂාව</div>
-                        </div>
-                      </div>
-                      {lang === 'si' && <span className="text-white font-black text-sm">✓</span>}
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
             </div>
           </div>
 
@@ -1272,6 +1173,183 @@ export const TVDisplay: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Multilingual Selector Dropdown Portal - Rendered directly in document.body at z-[9999] */}
+      {mounted && showLangMenu && typeof document !== 'undefined' && createPortal(
+        <div className="portal-language-menu">
+          {/* Backdrop overlay for quick click-away */}
+          <div
+            className="fixed inset-0 z-[9998] bg-black/50 backdrop-blur-[2px]"
+            onClick={() => setShowLangMenu(false)}
+          />
+
+          {/* Dropdown Menu floating in document.body at z-[9999] */}
+          <div
+            ref={langMenuRef}
+            style={dropdownCoords ? {
+              position: 'fixed',
+              top: `${dropdownCoords.top}px`,
+              left: `${dropdownCoords.left}px`,
+              zIndex: 9999
+            } : {
+              position: 'fixed',
+              top: '72px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 9999
+            }}
+            className="w-[calc(100vw-2rem)] max-w-[320px] sm:w-80 bg-slate-950/98 border-2 border-sky-400 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.95)] backdrop-blur-2xl p-2.5 animate-in fade-in zoom-in-95 duration-150 text-slate-100"
+          >
+            <div className="px-3 py-2 text-[11px] font-black uppercase tracking-wider text-sky-300 border-b border-slate-800/80 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <span>🌐</span>
+                <span>{t('language') || 'Language'}</span>
+              </span>
+              <span className="text-[10px] text-slate-400 font-semibold lowercase">5 options</span>
+            </div>
+
+            <div className="flex flex-col gap-1 mt-1.5">
+              {/* 1. English */}
+              <button
+                type="button"
+                onClick={() => {
+                  setLanguage('en');
+                  setShowLangMenu(false);
+                }}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
+                  lang === 'en'
+                    ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black'
+                    : 'text-slate-200 hover:text-white hover:bg-slate-800/80'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="text-base">🇬🇧</span>
+                  <div>
+                    <div className="font-bold">English</div>
+                    <div className={`text-[10px] font-medium ${lang === 'en' ? 'text-sky-100' : 'text-slate-400'}`}>Standard English Display</div>
+                  </div>
+                </div>
+                {lang === 'en' && <span className="text-white font-black text-sm">✓</span>}
+              </button>
+
+              {/* 2. Arabic Option 1: Arabic Words + Default 0-9 Numbers */}
+              <button
+                type="button"
+                onClick={() => {
+                  const updated = {
+                    ...settings,
+                    language: 'ar' as LanguageCode,
+                    arabicNumerals: false,
+                    numeralSystem: 'western' as const
+                  };
+                  setSettings(updated);
+                  saveTVSettings(updated);
+                  setShowLangMenu(false);
+                }}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
+                  lang === 'ar' && !settings.arabicNumerals && settings.numeralSystem !== 'eastern_arabic'
+                    ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black border border-sky-400/50'
+                    : 'text-slate-200 hover:text-white hover:bg-slate-800/80'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="text-base">🇸🇦</span>
+                  <div>
+                    <div className="font-bold font-arabic">عربي (0-9)</div>
+                    <div className={`text-[10px] font-medium ${lang === 'ar' && !settings.arabicNumerals && settings.numeralSystem !== 'eastern_arabic' ? 'text-sky-100' : 'text-slate-400'}`}>
+                      نصوص عربية + أرقام عادية
+                    </div>
+                  </div>
+                </div>
+                {lang === 'ar' && !settings.arabicNumerals && settings.numeralSystem !== 'eastern_arabic' && (
+                  <span className="text-white font-black text-sm">✓</span>
+                )}
+              </button>
+
+              {/* 3. Arabic Option 2: Totally Arabic (Arabic Words + ٠-٩ Eastern Arabic Numerals) */}
+              <button
+                type="button"
+                onClick={() => {
+                  const updated = {
+                    ...settings,
+                    language: 'ar' as LanguageCode,
+                    arabicNumerals: true,
+                    numeralSystem: 'eastern_arabic' as const
+                  };
+                  setSettings(updated);
+                  saveTVSettings(updated);
+                  setShowLangMenu(false);
+                }}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
+                  lang === 'ar' && (settings.arabicNumerals || settings.numeralSystem === 'eastern_arabic')
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-md font-black border border-emerald-400/60'
+                    : 'text-emerald-300 hover:text-white hover:bg-slate-800/80'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="text-base">✨</span>
+                  <div>
+                    <div className="font-bold font-arabic">عربي كامل (٠-٩)</div>
+                    <div className={`text-[10px] font-medium ${lang === 'ar' && (settings.arabicNumerals || settings.numeralSystem === 'eastern_arabic') ? 'text-emerald-100' : 'text-emerald-400/80'}`}>
+                      أرقام ونصوص عربية كاملة
+                    </div>
+                  </div>
+                </div>
+                {lang === 'ar' && (settings.arabicNumerals || settings.numeralSystem === 'eastern_arabic') && (
+                  <span className="text-white font-black text-sm">✓</span>
+                )}
+              </button>
+
+              {/* 4. Tamil */}
+              <button
+                type="button"
+                onClick={() => {
+                  setLanguage('ta');
+                  setShowLangMenu(false);
+                }}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
+                  lang === 'ta'
+                    ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black'
+                    : 'text-slate-200 hover:text-white hover:bg-slate-800/80'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="text-base">🇱🇰</span>
+                  <div>
+                    <div className="font-bold">தமிழ் (Tamil)</div>
+                    <div className={`text-[10px] font-medium ${lang === 'ta' ? 'text-sky-100' : 'text-slate-400'}`}>தமிழ் மொழி</div>
+                  </div>
+                </div>
+                {lang === 'ta' && <span className="text-white font-black text-sm">✓</span>}
+              </button>
+
+              {/* 5. Sinhala */}
+              <button
+                type="button"
+                onClick={() => {
+                  setLanguage('si');
+                  setShowLangMenu(false);
+                }}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
+                  lang === 'si'
+                    ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md font-black'
+                    : 'text-slate-200 hover:text-white hover:bg-slate-800/80'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="text-base">🇱🇰</span>
+                  <div>
+                    <div className="font-bold">සිංහල (Sinhala)</div>
+                    <div className={`text-[10px] font-medium ${lang === 'si' ? 'text-sky-100' : 'text-slate-400'}`}>සිංහල භාෂාව</div>
+                  </div>
+                </div>
+                {lang === 'si' && <span className="text-white font-black text-sm">✓</span>}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </>
   );
 };
