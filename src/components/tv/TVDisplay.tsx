@@ -486,7 +486,7 @@ export const TVDisplay: React.FC = () => {
         />
 
         {/* Top Header Bar */}
-        <header className="glass-panel flex justify-between items-center px-4 sm:px-6 py-2 sm:py-2.5 rounded-2xl shrink-0 border border-blue-500/30 shadow-2xl relative z-10 gap-3">
+        <header className="glass-panel flex justify-between items-center px-4 sm:px-6 py-2 sm:py-2.5 rounded-2xl shrink-0 border border-blue-500/30 shadow-2xl relative z-40 gap-3">
           {/* Mosque Brand & Title */}
           <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-blue-500 via-sky-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xl sm:text-2xl shadow-lg shadow-blue-500/40 border border-sky-300 shrink-0">
@@ -528,7 +528,7 @@ export const TVDisplay: React.FC = () => {
             </button>
 
             {/* Multilingual Selector Dropdown */}
-            <div className="relative shrink-0" ref={langMenuRef}>
+            <div className="relative shrink-0 z-50" ref={langMenuRef}>
               <button
                 type="button"
                 onClick={() => setShowLangMenu((prev) => !prev)}
@@ -546,14 +546,20 @@ export const TVDisplay: React.FC = () => {
 
               {/* Dropdown Menu */}
               {showLangMenu && (
-                <div className="absolute right-0 sm:left-0 sm:right-auto mt-2 w-72 bg-slate-950/95 border border-sky-500/40 rounded-2xl shadow-2xl backdrop-blur-xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="px-3 py-2 text-[11px] font-black uppercase tracking-wider text-sky-300 border-b border-slate-800/80 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <span>🌐</span>
-                      <span>{t('language') || 'Language'}</span>
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-semibold lowercase">5 options</span>
-                  </div>
+                <>
+                  {/* Backdrop overlay for mobile & easy click-away */}
+                  <div
+                    className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[1px] sm:hidden"
+                    onClick={() => setShowLangMenu(false)}
+                  />
+
+                  <div className="fixed left-3 right-3 top-16 max-w-xs mx-auto sm:max-w-none sm:mx-0 sm:absolute sm:left-0 sm:right-auto sm:top-full sm:mt-2 sm:w-72 bg-slate-950/98 border border-sky-400/60 rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl p-2.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="px-3 py-2 text-[11px] font-black uppercase tracking-wider text-sky-300 border-b border-slate-800/80 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <span>🌐</span>
+                        <span>{t('language') || 'Language'}</span>
+                      </span>
+                    </div>
 
                   <div className="flex flex-col gap-1 mt-1.5">
                     {/* 1. English */}
@@ -694,7 +700,8 @@ export const TVDisplay: React.FC = () => {
                     </button>
                   </div>
                 </div>
-              )}
+              </>
+            )}
             </div>
           </div>
 
