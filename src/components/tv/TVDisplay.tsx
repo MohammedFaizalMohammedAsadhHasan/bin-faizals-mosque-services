@@ -701,7 +701,7 @@ export const TVDisplay: React.FC = () => {
 
           {/* Live Clock & Dates */}
           <div className="text-right flex items-center gap-2 sm:gap-4 shrink-0">
-            <div className={`text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl 3xl:text-[7rem] tv:text-[8.5rem] font-black font-mono tracking-tight leading-none transition-all duration-1000 whitespace-nowrap drop-shadow-[0_0_25px_rgba(56,189,248,0.7)] ${activeFontTheme.clockGlow}`}>
+            <div className="text-3xl sm:text-5xl lg:text-5xl xl:text-6xl 2xl:text-7xl 3xl:text-8xl tv:text-9xl font-black font-mono tracking-tight my-1 leading-none transition-all duration-1000 text-purple-300 drop-shadow-[0_0_35px_rgba(192,132,252,0.85)]">
               {mounted
                 ? (() => {
                     let h = time.getHours();
