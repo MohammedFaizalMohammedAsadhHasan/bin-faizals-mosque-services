@@ -704,22 +704,17 @@ export const TVDisplay: React.FC = () => {
             <div className="text-3xl sm:text-5xl lg:text-5xl xl:text-6xl 2xl:text-7xl 3xl:text-8xl tv:text-9xl font-black font-mono tracking-tight my-1 leading-none transition-all duration-1000 text-purple-300 drop-shadow-[0_0_35px_rgba(192,132,252,0.85)]">
               {mounted
                 ? (() => {
-                    let h = time.getHours();
-                    const m = time.getMinutes().toString().padStart(2, '0');
-                    const s = time.getSeconds().toString().padStart(2, '0');
-                    let ampm = '';
-
-                    if (!settings.time24Format) {
-                      ampm = h >= 12 ? (lang === 'ar' ? 'م' : 'PM') : (lang === 'ar' ? 'ص' : 'AM');
-                      h = h % 12;
-                      if (h === 0) h = 12;
-                    }
-
-                    const hStr = h.toString().padStart(2, '0');
-
-                    const formattedH = formatWithNumeralSystem(hStr, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
-                    const formattedM = formatWithNumeralSystem(m, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
-                    const formattedS = formatWithNumeralSystem(s, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
+                    const nextKey = prayerState.nextPrayer;
+                    const nextTime = getTodayPrayerTimes()[nextKey as keyof typeof getTodayPrayerTimes()];
+                    const now = new Date();
+                    const diffMs = Math.max(0, nextTime.getTime() - now.getTime());
+                    const totalSec = Math.floor(diffMs / 1000);
+                    const cdH = Math.floor(totalSec / 3600).toString().padStart(2, '0');
+                    const cdM = Math.floor((totalSec % 3600) / 60).toString().padStart(2, '0');
+                    const cdS = (totalSec % 60).toString().padStart(2, '0');
+                    const formattedH = formatWithNumeralSystem(cdH, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
+                    const formattedM = formatWithNumeralSystem(cdM, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
+                    const formattedS = formatWithNumeralSystem(cdS, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
 
                     return (
                       <span className="inline-flex items-baseline">
@@ -728,11 +723,6 @@ export const TVDisplay: React.FC = () => {
                         <span className="m">{formattedM}</span>
                         <span className="colon colon-sec text-[0.45em] opacity-80 ml-1 font-mono font-bold">:</span>
                         <span className="s text-[0.45em] opacity-80 font-mono font-bold">{formattedS}</span>
-                        {ampm && (
-                          <span className="ampm text-[0.35em] font-sans font-black uppercase tracking-wider text-sky-300 ml-1.5 sm:ml-2 align-baseline">
-                            {ampm}
-                          </span>
-                        )}
                       </span>
                     );
                   })()
