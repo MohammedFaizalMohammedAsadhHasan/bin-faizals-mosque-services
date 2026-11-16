@@ -701,27 +701,54 @@ export const TVDisplay: React.FC = () => {
 
           {/* Live Clock & Dates */}
           <div className="text-right flex items-center gap-2 sm:gap-4 shrink-0">
-            <div className={`text-2xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl 2xl:text-7xl 3xl:text-8xl font-black font-mono tracking-tight leading-none transition-all duration-1000 whitespace-nowrap drop-shadow-[0_0_25px_rgba(56,189,248,0.7)] ${activeFontTheme.clockGlow}`}>
+            <div className={`text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl 3xl:text-[7rem] tv:text-[8.5rem] font-black font-mono tracking-tight leading-none transition-all duration-1000 whitespace-nowrap drop-shadow-[0_0_25px_rgba(56,189,248,0.7)] ${activeFontTheme.clockGlow}`}>
               {mounted
                 ? (() => {
-                    const raw = time.toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
-                      hour12: !settings.time24Format
-                    });
-                    return formatWithNumeralSystem(
-                      raw,
-                      settings.numeralSystem,
-                      lang === 'ar',
-                      settings.arabicNumerals ?? false
+                    let h = time.getHours();
+                    const m = time.getMinutes().toString().padStart(2, '0');
+                    const s = time.getSeconds().toString().padStart(2, '0');
+                    let ampm = '';
+
+                    if (!settings.time24Format) {
+                      ampm = h >= 12 ? (lang === 'ar' ? 'م' : 'PM') : (lang === 'ar' ? 'ص' : 'AM');
+                      h = h % 12;
+                      if (h === 0) h = 12;
+                    }
+
+                    const hStr = h.toString().padStart(2, '0');
+
+                    const formattedH = formatWithNumeralSystem(hStr, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
+                    const formattedM = formatWithNumeralSystem(m, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
+                    const formattedS = formatWithNumeralSystem(s, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
+
+                    return (
+                      <span className="inline-flex items-baseline">
+                        <span className="h">{formattedH}</span>
+                        <span className="colon colon-main mx-0.5">:</span>
+                        <span className="m">{formattedM}</span>
+                        <span className="colon colon-sec text-[0.45em] opacity-80 ml-1 font-mono font-bold">:</span>
+                        <span className="s text-[0.45em] opacity-80 font-mono font-bold">{formattedS}</span>
+                        {ampm && (
+                          <span className="ampm text-[0.35em] font-sans font-black uppercase tracking-wider text-sky-300 ml-1.5 sm:ml-2 align-baseline">
+                            {ampm}
+                          </span>
+                        )}
+                      </span>
                     );
                   })()
-                : '--:--:--'}
+                : (
+                  <span className="inline-flex items-baseline">
+                    <span className="h">--</span>
+                    <span className="colon colon-main mx-0.5">:</span>
+                    <span className="m">--</span>
+                    <span className="colon colon-sec text-[0.45em] opacity-80 ml-1">:</span>
+                    <span className="s text-[0.45em] opacity-80">--</span>
+                  </span>
+                )}
             </div>
-            <div className="h-8 w-px bg-slate-700/60 hidden sm:block" />
+            <div className="h-10 sm:h-14 md:h-16 lg:h-20 w-px bg-slate-700/60 hidden sm:block" />
             <div className="text-right hidden sm:block whitespace-nowrap shrink-0">
-              <div className="text-[10px] sm:text-[11px] xl:text-xs font-bold text-slate-200 uppercase tracking-wide leading-tight">
+              <div className="text-[10px] sm:text-xs md:text-sm xl:text-base font-bold text-slate-200 uppercase tracking-wide leading-tight">
                 {mounted
                   ? formatLocalizedDate(
                       time,
@@ -730,7 +757,7 @@ export const TVDisplay: React.FC = () => {
                     )
                   : '---'}
               </div>
-              <div className={`text-xs sm:text-sm font-arabic font-bold mt-1 transition-colors duration-1000 leading-tight ${activeFontTheme.accentText}`}>
+              <div className={`text-xs sm:text-sm md:text-base xl:text-lg font-arabic font-bold mt-1 transition-colors duration-1000 leading-tight ${activeFontTheme.accentText}`}>
                 {mounted ? hijriDateStr : '---'}
               </div>
             </div>

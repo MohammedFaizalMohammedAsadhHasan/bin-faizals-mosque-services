@@ -214,6 +214,26 @@ body {
   animation: royal-pulse 2.5s infinite ease-in-out;
 }
 
+/* Digital Mosque Clock Colon Blinking Animation */
+.colon-main {
+  display: inline-block;
+  opacity: 0.95;
+  animation: colon-blink 1s steps(1, start) infinite;
+}
+
+@keyframes colon-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+
+.colon-sec {
+  display: inline-block;
+}
+
 /* Accessible High-Contrast TV & Remote Focus Ring */
 :focus-visible {
   outline: 3px solid #38bdf8 !important;
