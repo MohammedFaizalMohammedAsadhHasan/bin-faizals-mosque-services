@@ -171,9 +171,10 @@ export const TVDisplay: React.FC = () => {
       const rect = langButtonRef.current.getBoundingClientRect();
       const isMobile = window.innerWidth < 640;
       if (isMobile) {
+        const menuWidth = Math.min(320, window.innerWidth - 24);
         setDropdownCoords({
-          top: rect.bottom + 8,
-          left: Math.max(16, (window.innerWidth - 320) / 2)
+          top: Math.min(rect.bottom + 8, window.innerHeight - 350),
+          left: Math.max(12, (window.innerWidth - menuWidth) / 2)
         });
       } else {
         const dropdownWidth = 320;
@@ -183,7 +184,7 @@ export const TVDisplay: React.FC = () => {
         }
         if (left < 16) left = 16;
         setDropdownCoords({
-          top: rect.bottom + 8,
+          top: Math.min(rect.bottom + 8, window.innerHeight - 350),
           left: left
         });
       }
@@ -214,9 +215,10 @@ export const TVDisplay: React.FC = () => {
         const rect = langButtonRef.current.getBoundingClientRect();
         const isMobile = window.innerWidth < 640;
         if (isMobile) {
+          const menuWidth = Math.min(320, window.innerWidth - 24);
           setDropdownCoords({
-            top: rect.bottom + 8,
-            left: Math.max(16, (window.innerWidth - 320) / 2)
+            top: Math.min(rect.bottom + 8, window.innerHeight - 350),
+            left: Math.max(12, (window.innerWidth - menuWidth) / 2)
           });
         } else {
           const dropdownWidth = 320;
@@ -226,7 +228,7 @@ export const TVDisplay: React.FC = () => {
           }
           if (left < 16) left = 16;
           setDropdownCoords({
-            top: rect.bottom + 8,
+            top: Math.min(rect.bottom + 8, window.innerHeight - 350),
             left: left
           });
         }
@@ -416,16 +418,75 @@ export const TVDisplay: React.FC = () => {
     return () => clearInterval(slideInterval);
   }, [slidesList.length]);
 
-  // Remote Control Key Listener: Press 0 to open TV Quick Settings
+  // Fullscreen state & handler with graceful browser fallback
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(!!(document.fullscreenElement || (document as any).webkitFullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    document.addEventListener('webkitfullscreenchange', handleFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFsChange);
+      document.removeEventListener('webkitfullscreenchange', handleFsChange);
+    };
+  }, []);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement && !(document as any).webkitFullscreenElement) {
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen();
+        } else if ((document.documentElement as any).webkitRequestFullscreen) {
+          await (document.documentElement as any).webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen();
+        }
+      }
+    } catch (err) {
+      console.warn('Fullscreen request rejected or not permitted:', err);
+    }
+  };
+
+  // Remote Control Key Listener: Press 0 for TV Quick Settings, F for Fullscreen, M for Mute, L for Language, Esc/Back to dismiss
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === '0') {
+      // Avoid intercepting input if typing in an input or textarea
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
+        return;
+      }
+
+      const key = e.key;
+      const code = e.keyCode;
+
+      if (key === '0') {
         setShowAdminMenu((prev) => !prev);
-      } else if (e.key === 'Escape') {
+      } else if (key === 'f' || key === 'F') {
+        toggleFullscreen();
+      } else if (key === 'm' || key === 'M') {
+        setSettings((prev) => {
+          const updated = {
+            ...prev,
+            azanAudio: { ...prev.azanAudio, enabled: !prev.azanAudio.enabled }
+          };
+          saveTVSettings(updated);
+          return updated;
+        });
+      } else if (key === 'l' || key === 'L') {
+        setShowLangMenu((prev) => !prev);
+      } else if (key === 'Escape' || code === 27 || code === 10009 || code === 461 || key === 'GoBack') {
+        // 10009 = Tizen Return, 461 = LG webOS Back
         setShowAdminMenu(false);
         setShowSilentAlert(false);
         setActiveIqamahAlertPrayer(null);
         setDismissedAzan(true);
+        setShowLangMenu(false);
         stopAzanAudio();
       }
     };
@@ -514,8 +575,8 @@ export const TVDisplay: React.FC = () => {
     <>
       {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} minDurationMs={1800} />}
 
-      {/* Main TV Screen: Strictly bounded to full screen height and width without scrolling */}
-      <div className="tv-container flex flex-col h-screen max-h-screen w-screen p-2.5 sm:p-3.5 lg:p-4 select-none overflow-hidden justify-between relative bg-[#020617] text-slate-100">
+      {/* Main TV Screen: Strictly bounded to full screen height on TV/landscape, elegantly scrollable on mobile portrait */}
+      <div className="tv-container flex flex-col min-h-screen lg:h-screen lg:max-h-screen w-screen p-2 sm:p-3 lg:p-4 tv-overscan-safe select-none justify-between relative bg-[#020617] text-slate-100 overflow-y-auto lg:overflow-hidden">
         {/* Dynamic Royal Mosque Background Slideshow (100% Mosque Architecture, No Humans) */}
         <BackgroundMedia settings={settings.background} />
 
@@ -545,43 +606,58 @@ export const TVDisplay: React.FC = () => {
         />
 
         {/* Top Header Bar */}
-        <header className="glass-panel flex justify-between items-center px-4 sm:px-6 py-2 sm:py-2.5 rounded-2xl shrink-0 border border-blue-500/30 shadow-2xl relative z-40 gap-3">
+        <header className="glass-panel flex flex-wrap sm:flex-nowrap justify-between items-center px-3 sm:px-6 py-2 sm:py-2.5 rounded-2xl shrink-0 border border-blue-500/30 shadow-2xl relative z-40 gap-2 sm:gap-3">
           {/* Mosque Brand & Title */}
-          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-blue-500 via-sky-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xl sm:text-2xl shadow-lg shadow-blue-500/40 border border-sky-300 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-blue-500 via-sky-500 to-indigo-600 flex items-center justify-center font-bold text-white text-lg sm:text-2xl shadow-lg shadow-blue-500/40 border border-sky-300 shrink-0">
               🕌
             </div>
             <div className="min-w-0">
-              <h1 className={`text-base sm:text-lg lg:text-xl xl:text-2xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r ${activeFontTheme.brandTitle} uppercase drop-shadow-md transition-all duration-1000 whitespace-nowrap leading-none truncate`}>
+              <h1 className={`text-sm sm:text-lg lg:text-xl xl:text-2xl 3xl:text-3xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r ${activeFontTheme.brandTitle} uppercase drop-shadow-md transition-all duration-1000 whitespace-nowrap leading-none truncate`}>
                 {settings.mosqueName}
               </h1>
               <div className="mt-1 flex items-center">
-                <span className={`text-[10px] sm:text-xs font-black tracking-widest uppercase bg-blue-950/80 px-2 py-0.5 rounded-md border border-blue-500/30 ${activeFontTheme.accentText} transition-colors duration-1000 whitespace-nowrap leading-none inline-block`}>
+                <span className={`text-[9px] sm:text-xs font-black tracking-widest uppercase bg-blue-950/80 px-2 py-0.5 rounded-md border border-blue-500/30 ${activeFontTheme.accentText} transition-colors duration-1000 whitespace-nowrap leading-none inline-block`}>
                   {settings.displayName}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Center Actions: Language Switcher & Automatic Voice Alert Arm Indicator */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Center Actions: Fullscreen, Language Switcher & Automatic Voice Alert Arm Indicator */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* TV Fullscreen Kiosk Mode Button */}
+            <button
+              onClick={toggleFullscreen}
+              className={`p-2 rounded-xl text-base transition-all flex items-center justify-center border shadow-md shrink-0 hover:scale-105 focus-visible:ring-4 focus-visible:ring-sky-400 ${
+                isFullscreen
+                  ? 'bg-blue-600/90 border-sky-400 text-white shadow-sky-500/40 ring-2 ring-sky-400/50'
+                  : 'bg-slate-900/85 border-blue-500/30 text-sky-200 hover:border-sky-400/60 hover:text-white'
+              }`}
+              title={isFullscreen ? 'Exit Fullscreen (F)' : 'Enter TV Fullscreen Kiosk Mode (F)'}
+              aria-label={isFullscreen ? 'Exit Fullscreen' : 'Enter TV Fullscreen'}
+            >
+              <span className="text-base leading-none">{isFullscreen ? '🗗' : '⛶'}</span>
+            </button>
+
             {/* Automatic Voice Alerts Status: Icon Only */}
             <button
               onClick={handleManualAudioUnlock}
-              className={`p-2 rounded-xl text-base transition-all flex items-center justify-center border shadow-md shrink-0 ${
+              className={`p-2 rounded-xl text-base transition-all flex items-center justify-center border shadow-md shrink-0 hover:scale-105 focus-visible:ring-4 focus-visible:ring-sky-400 ${
                 settings.azanAudio.enabled
                   ? audioReady
-                    ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300 hover:scale-105'
-                    : 'bg-amber-950/90 border-amber-500/60 text-amber-200 animate-pulse hover:scale-105'
-                  : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:scale-105'
+                    ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300'
+                    : 'bg-amber-950/90 border-amber-500/60 text-amber-200 animate-pulse'
+                  : 'bg-slate-900/80 border-slate-700 text-slate-400'
               }`}
               title={
                 settings.azanAudio.enabled
                   ? audioReady
-                    ? 'Voice Alerts Armed: Madinah Azan & Iqamath'
-                    : 'Click to Enable Voice Alerts Audio'
-                  : 'Voice Alerts Muted'
+                    ? 'Voice Alerts Armed: Madinah Azan & Iqamath (M)'
+                    : 'Click to Enable Voice Alerts Audio (M)'
+                  : 'Voice Alerts Muted (M)'
               }
+              aria-label="Voice Alerts Audio Toggle"
             >
               <span>{settings.azanAudio.enabled ? (audioReady ? '🔊' : '🔔') : '🔇'}</span>
             </button>
@@ -592,12 +668,12 @@ export const TVDisplay: React.FC = () => {
                 ref={langButtonRef}
                 type="button"
                 onClick={toggleLangMenu}
-                className={`p-2 rounded-xl text-base transition-all flex items-center justify-center border shadow-md shrink-0 hover:scale-105 ${
+                className={`p-2 rounded-xl text-base transition-all flex items-center justify-center border shadow-md shrink-0 hover:scale-105 focus-visible:ring-4 focus-visible:ring-sky-400 ${
                   showLangMenu
                     ? 'bg-blue-600/90 border-sky-400 text-white shadow-sky-500/40 ring-2 ring-sky-400/50'
                     : 'bg-slate-900/85 border-blue-500/30 text-sky-200 hover:border-sky-400/60 hover:text-white'
                 }`}
-                title="Select Language & Arabic Numeral Options"
+                title="Select Language & Arabic Numeral Options (L)"
                 aria-label="Language options"
                 aria-expanded={showLangMenu}
               >
@@ -624,8 +700,8 @@ export const TVDisplay: React.FC = () => {
           )}
 
           {/* Live Clock & Dates */}
-          <div className="text-right flex items-center gap-3 sm:gap-4 shrink-0">
-            <div className={`text-3xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-black font-mono tracking-tight leading-none transition-all duration-1000 whitespace-nowrap drop-shadow-[0_0_25px_rgba(56,189,248,0.7)] ${activeFontTheme.clockGlow}`}>
+          <div className="text-right flex items-center gap-2 sm:gap-4 shrink-0">
+            <div className={`text-2xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl 2xl:text-7xl 3xl:text-8xl font-black font-mono tracking-tight leading-none transition-all duration-1000 whitespace-nowrap drop-shadow-[0_0_25px_rgba(56,189,248,0.7)] ${activeFontTheme.clockGlow}`}>
               {mounted
                 ? (() => {
                     const raw = time.toLocaleTimeString('en-US', {
@@ -660,8 +736,9 @@ export const TVDisplay: React.FC = () => {
             </div>
             <button
               onClick={() => setShowAdminMenu(true)}
-              className="p-2 text-slate-400 hover:text-white rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition-all text-xs sm:text-sm shrink-0"
+              className="p-2 text-slate-400 hover:text-white rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 transition-all text-xs sm:text-sm shrink-0 hover:scale-105 focus-visible:ring-4 focus-visible:ring-sky-400"
               title="Quick Options (Key: 0)"
+              aria-label="Open Quick Options"
             >
               ⚙
             </button>
@@ -669,9 +746,9 @@ export const TVDisplay: React.FC = () => {
         </header>
 
         {/* Main Grid Area: 100% visible on TV / widescreen, beautifully responsive on mobile */}
-        <main className="flex-1 min-h-0 flex flex-col my-1.5 overflow-hidden relative z-10">
+        <main className="flex-1 min-h-0 flex flex-col my-1.5 overflow-y-auto lg:overflow-hidden relative z-10">
           {/* Mobile Portrait Landscape Mode Recommendation */}
-          <div className="md:hidden flex items-center justify-between bg-sky-950/80 border border-sky-400/30 px-3 py-1.5 rounded-xl mb-1.5 text-[11px] text-sky-200 shadow-md shrink-0">
+          <div className="lg:hidden flex items-center justify-between bg-sky-950/80 border border-sky-400/30 px-3 py-1.5 rounded-xl mb-1.5 text-[11px] text-sky-200 shadow-md shrink-0">
             <span className="flex items-center gap-1.5 font-bold">
               <span>📱</span>
               <span>For Smart TV view, rotate phone to <strong>Landscape mode 🔄</strong></span>
@@ -683,7 +760,7 @@ export const TVDisplay: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 sm:gap-3 xl:gap-4 flex-1 min-h-0 items-stretch overflow-y-auto lg:overflow-hidden">
             {/* Left Side: All 6 Daily Prayer Cards (Subah, Sunrise, Luhar, Asr, Maghrib, Isha) */}
-            <div className={`col-span-1 lg:col-span-8 grid ${prayersList.length > 5 ? 'grid-cols-3 grid-rows-2' : 'grid-cols-5 grid-rows-1'} gap-2 sm:gap-3 xl:gap-3.5 h-auto lg:h-full min-h-0`}>
+            <div className={`col-span-1 lg:col-span-8 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 ${prayersList.length > 5 ? 'lg:grid-cols-3 lg:grid-rows-2' : 'lg:grid-cols-5 lg:grid-rows-1'} gap-2 sm:gap-3 xl:gap-3.5 h-auto lg:h-full min-h-0`}>
               {prayersList.map((item) => {
                 const isSunrise = item.key === 'sunrise';
                 const isActive = prayerState.nextPrayer === item.key;
@@ -718,17 +795,17 @@ export const TVDisplay: React.FC = () => {
                     {isSunrise ? (
                       /* Sunrise Section: Centered, huge, bold time with ZERO Iqamath option */
                       <div className="flex-1 flex flex-col items-center justify-center my-0.5">
-                        <div className="text-3xl sm:text-4xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-black font-mono tracking-tight leading-none text-white drop-shadow-xl">
+                        <div className="text-2xl sm:text-3xl lg:text-3xl xl:text-4xl 2xl:text-5xl 3xl:text-6xl font-black font-mono tracking-tight leading-none text-white drop-shadow-xl">
                           {formatDisplayTime(item.azan24)}
                         </div>
                       </div>
                     ) : (
                       /* 5 Daily Prayers: Large Azan Label and Giant Time Numbers */
                       <div className="my-0.5 sm:my-1">
-                        <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-300 block mb-0.5">
+                        <span className="text-[9px] sm:text-[10px] xl:text-xs font-black uppercase tracking-wider text-slate-300 block mb-0.5">
                           {t('azan')}
                         </span>
-                        <div className={`text-3xl sm:text-4xl lg:text-4xl xl:text-5xl font-black font-mono tracking-tight leading-none drop-shadow-xl transition-all duration-1000 ${
+                        <div className={`text-2xl sm:text-3xl lg:text-3xl xl:text-4xl 2xl:text-5xl 3xl:text-6xl font-black font-mono tracking-tight leading-none drop-shadow-xl transition-all duration-1000 ${
                           isActive ? activeFontTheme.prayerActiveTime : 'text-white'
                         }`}>
                           {formatDisplayTime(item.azan24)}
@@ -739,32 +816,32 @@ export const TVDisplay: React.FC = () => {
                     {/* Bottom: Dedicated Iqamah Sub-Panel (Strictly for 5 daily prayers, NOT for Sunrise) */}
                     {isSunrise ? (
                       /* Sunrise Section: No Iqamath option required */
-                      <div className="bg-amber-950/40 border border-amber-500/20 rounded-xl px-2.5 py-1.5 text-center shrink-0">
-                        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-amber-200/90 font-mono">
+                      <div className="bg-amber-950/40 border border-amber-500/20 rounded-xl px-2 py-1 sm:px-2.5 sm:py-1.5 text-center shrink-0">
+                        <span className="text-[9px] sm:text-[10px] xl:text-xs font-bold uppercase tracking-wider text-amber-200/90 font-mono">
                           🌅 DUHA TIME
                         </span>
                       </div>
                     ) : (
                       /* Daily 5 Prayers: Subah, Luhar, Asr, Maghrib, Isha Iqamah Sub-Panel */
-                      <div className="bg-slate-950/80 border border-white/10 rounded-xl px-2.5 sm:px-3 py-1.5 sm:py-2 flex justify-between items-center shrink-0 shadow-inner">
-                        <span className="text-[10px] sm:text-xs xl:text-sm font-black uppercase tracking-wider text-slate-200">
+                      <div className="bg-slate-950/80 border border-white/10 rounded-xl px-2 sm:px-2.5 xl:px-3 py-1 sm:py-1.5 xl:py-2 flex justify-between items-center shrink-0 shadow-inner">
+                        <span className="text-[9px] sm:text-[10px] xl:text-xs 2xl:text-sm font-black uppercase tracking-wider text-slate-200">
                           {t('iqamah')}
                         </span>
                         {iqamahInfo ? (
                           <div className="text-right">
-                            <span className={`font-mono font-black text-xl sm:text-2xl xl:text-3xl block leading-none transition-colors duration-1000 ${
+                            <span className={`font-mono font-black text-base sm:text-lg xl:text-2xl 2xl:text-3xl 3xl:text-4xl block leading-none transition-colors duration-1000 ${
                               isActive ? activeFontTheme.accentText : 'text-sky-300'
                             }`}>
                               {iqamahInfo.formatted}
                             </span>
                             {iqamahInfo.offsetLabel && (
-                              <span className="text-[10px] sm:text-xs font-mono font-bold text-sky-400 block mt-0.5">
+                              <span className="text-[9px] sm:text-[10px] xl:text-xs font-mono font-bold text-sky-400 block mt-0.5">
                                 {iqamahInfo.offsetLabel}
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-slate-500 font-mono font-bold text-lg">-</span>
+                          <span className="text-slate-500 font-mono font-bold text-base sm:text-lg">-</span>
                         )}
                       </div>
                     )}
@@ -782,7 +859,7 @@ export const TVDisplay: React.FC = () => {
                   {t('countdownTo')} {(t(prayerState.nextPrayer) || prayerState.nextPrayer).toUpperCase()}
                 </span>
 
-                <div className={`text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black font-mono tracking-tight my-1 leading-none transition-all duration-1000 ${activeFontTheme.countdownGlow}`}>
+                <div className={`text-3xl sm:text-5xl lg:text-5xl xl:text-6xl 2xl:text-7xl 3xl:text-8xl tv:text-9xl font-black font-mono tracking-tight my-1 leading-none transition-all duration-1000 ${activeFontTheme.countdownGlow}`}>
                   {formatSeconds(prayerState.timeRemainingSeconds)}
                 </div>
 
@@ -1198,7 +1275,7 @@ export const TVDisplay: React.FC = () => {
               transform: 'translateX(-50%)',
               zIndex: 9999
             }}
-            className="w-[calc(100vw-2rem)] max-w-[320px] sm:w-80 bg-slate-950/98 border-2 border-sky-400 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.95)] backdrop-blur-2xl p-2.5 animate-in fade-in zoom-in-95 duration-150 text-slate-100"
+            className="w-[calc(100vw-1.5rem)] max-w-[320px] sm:w-80 bg-slate-950/98 border-2 border-sky-400 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.95)] backdrop-blur-2xl p-2.5 animate-in fade-in zoom-in-95 duration-150 text-slate-100 max-h-[85vh] overflow-y-auto"
           >
             <div className="px-3 py-2 text-[11px] font-black uppercase tracking-wider text-sky-300 border-b border-slate-800/80 flex items-center justify-between">
               <span className="flex items-center gap-1.5">

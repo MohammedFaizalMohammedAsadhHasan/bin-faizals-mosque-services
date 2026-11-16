@@ -68,9 +68,9 @@ export const TimetableUploader: React.FC = () => {
   };
 
   return (
-    <div className="glass-panel p-8 rounded-3xl max-w-xl w-full border border-slate-800">
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="text-xl font-bold text-slate-100">Annual Prayer Timetable Importer</h3>
+    <div className="glass-panel p-4 xs:p-6 sm:p-8 rounded-2xl sm:rounded-3xl w-full border border-slate-800">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+        <h3 className="text-lg sm:text-xl font-bold text-slate-100">Annual Prayer Timetable Importer</h3>
         <a
           href="/sample-annual-timetable.csv"
           download
@@ -79,11 +79,11 @@ export const TimetableUploader: React.FC = () => {
           📥 CSV Template
         </a>
       </div>
-      <p className="text-sm text-slate-400 mb-6">
+      <p className="text-xs sm:text-sm text-slate-400 mb-4 sm:mb-6">
         Upload the official 12-month CSV timetable to sync TV displays and PWA with IndexedDB offline caching.
       </p>
 
-      <div className="border-2 border-dashed border-emerald-500/40 hover:border-emerald-400 rounded-2xl p-8 text-center cursor-pointer transition-colors mb-6 bg-slate-900/40">
+      <div className="border-2 border-dashed border-emerald-500/40 hover:border-emerald-400 rounded-2xl p-4 sm:p-8 text-center cursor-pointer transition-colors mb-4 sm:mb-6 bg-slate-900/40">
         <input
           type="file"
           accept=".csv"

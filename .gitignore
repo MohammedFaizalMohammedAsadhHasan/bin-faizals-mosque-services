@@ -34,3 +34,11 @@ next-env.d.ts
 *.pem
 .idea/
 .vscode/
+
+# Android build artifacts
+.gradle/
+android/.gradle/
+android/build/
+android/app/build/
+*.iml
+local.properties

@@ -31,6 +31,12 @@ export const AmbientBubbles: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Respect user's reduced motion accessibility preference
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      return;
+    }
+
     let animationFrameId: number;
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
@@ -53,7 +59,10 @@ export const AmbientBubbles: React.FC = () => {
     window.addEventListener('mousemove', handleMouseMove);
 
     const particles: Particle[] = [];
-    const totalCount = 120; // Rich, dense, graceful atmospheric field
+    // Device-adaptive particle density: lightweight on mobile, rich on desktop & 4K TVs
+    const isMobile = window.innerWidth < 640;
+    const isTablet = window.innerWidth >= 640 && window.innerWidth < 1280;
+    const totalCount = isMobile ? 45 : isTablet ? 75 : 120;
 
     // Royal Blue & Celestial Color Palettes
     const colorPalettes = [
@@ -77,7 +86,7 @@ export const AmbientBubbles: React.FC = () => {
         // Sparkling Twinkling Star
         type = 'star';
         baseRadius = Math.random() * 2.5 + 1.2;
-        speedY = -(Math.random() * 0.2 + 0.05); // Very gentle ascent
+        speedY = -(Math.random() * 0.2 + 0.05);
         baseAlpha = Math.random() * 0.5 + 0.3;
       } else if (pChoice > 0.82) {
         // Large Glowing Bokeh Orb
@@ -188,10 +197,8 @@ export const AmbientBubbles: React.FC = () => {
 
         // Render Particle by Type
         if (p.type === 'star') {
-          // 4-point twinkling star
           drawStar(p.x, p.y, 4, p.radius * 2.2, p.radius * 0.6, p.color, p.alpha);
         } else if (p.type === 'bokeh') {
-          // Large luminous bokeh orb with rich radial glow
           const radial = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 2);
           radial.addColorStop(0, `rgba(${p.color}, ${p.alpha * 0.65})`);
           radial.addColorStop(0.5, `rgba(${p.color}, ${p.alpha * 0.28})`);
@@ -202,8 +209,7 @@ export const AmbientBubbles: React.FC = () => {
           ctx.arc(p.x, p.y, p.radius * 2, 0, Math.PI * 2);
           ctx.fill();
         } else {
-          // Mid-size realistic 3D glass bubble with refraction ring & specular shine arc
-          // 1. Soft radial outer halo
+          // Mid-size realistic 3D glass bubble
           const halo = ctx.createRadialGradient(p.x, p.y, p.radius * 0.3, p.x, p.y, p.radius * 1.6);
           halo.addColorStop(0, `rgba(${p.color}, ${p.alpha * 0.15})`);
           halo.addColorStop(0.8, `rgba(${p.color}, ${p.alpha * 0.4})`);
@@ -214,14 +220,12 @@ export const AmbientBubbles: React.FC = () => {
           ctx.arc(p.x, p.y, p.radius * 1.6, 0, Math.PI * 2);
           ctx.fill();
 
-          // 2. Bubble membrane ring
           ctx.beginPath();
           ctx.strokeStyle = `rgba(${p.color}, ${p.alpha * 0.8})`;
           ctx.lineWidth = 1.3;
           ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
           ctx.stroke();
 
-          // 3. Delicate top-left specular highlight shine
           ctx.beginPath();
           ctx.strokeStyle = `rgba(255, 255, 255, ${p.alpha * 0.9})`;
           ctx.lineWidth = 1.5;

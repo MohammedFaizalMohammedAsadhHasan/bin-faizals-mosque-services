@@ -11,6 +11,7 @@ import {
 } from '@/lib/settings/settingsManager';
 import { playAzanAudio, stopAzanAudio } from '@/lib/audio/azanAudioEngine';
 import { fetchLiveWeather, WeatherData } from '@/lib/weather/weatherEngine';
+import { TimetableUploader } from '@/components/admin/TimetableUploader';
 
 export default function AdminPage() {
   const [settings, setSettings] = useState<TVSettings>(DEFAULT_SETTINGS);
@@ -79,46 +80,46 @@ export default function AdminPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#020617] text-slate-100 p-4 md:p-8 max-w-7xl mx-auto font-sans">
+    <main className="min-h-screen bg-[#020617] text-slate-100 p-3 xs:p-4 sm:p-6 md:p-8 max-w-7xl mx-auto font-sans pb-24">
       {/* Top Header Bar */}
-      <header className="flex flex-wrap justify-between items-center mb-8 pb-6 border-b border-slate-800 gap-4">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 pb-5 border-b border-slate-800 gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <span className="text-3xl">🕌</span>
+            <span className="text-2xl xs:text-3xl">🕌</span>
             <div>
-              <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-200 via-sky-300 to-blue-200 tracking-wide">
+              <h1 className="text-xl xs:text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-200 via-sky-300 to-blue-200 tracking-wide uppercase">
                 MOSQUE ADMIN CONSOLE
               </h1>
-              <p className="text-xs font-bold text-sky-400 tracking-widest uppercase">
+              <p className="text-[10px] xs:text-xs font-bold text-sky-400 tracking-widest uppercase">
                 BIN FAIZAL&apos;S SMART TV MANAGEMENT SUITE
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
           {savedSuccess && (
-            <span className="px-4 py-2 bg-blue-500/20 border border-blue-500 text-sky-300 rounded-xl text-xs font-bold animate-pulse">
-              ✓ Settings Broadcast Live to TV!
+            <span className="px-3.5 py-2 bg-blue-500/20 border border-blue-500 text-sky-300 rounded-xl text-xs font-bold animate-pulse">
+              ✓ Saved Live to TV!
             </span>
           )}
           <button
             onClick={handleSave}
-            className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-black rounded-xl text-sm transition-all shadow-lg shadow-blue-600/30 uppercase tracking-wider"
+            className="px-5 xs:px-6 py-2.5 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-black rounded-xl text-xs sm:text-sm transition-all shadow-lg shadow-blue-600/30 uppercase tracking-wider min-h-[42px] flex items-center"
           >
             Save All Changes
           </button>
           <Link
             href="/tv"
-            className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition-all flex items-center gap-2"
+            className="px-3.5 xs:px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition-all flex items-center gap-1.5 min-h-[42px]"
           >
-            🖥️ Launch TV Screen →
+            <span>🖥️</span> <span>Launch TV →</span>
           </Link>
         </div>
       </header>
 
-      {/* Tabs Navigation */}
-      <div className="flex flex-wrap gap-2 mb-8 border-b border-slate-800 pb-3">
+      {/* Responsive Horizontal Scrollable Tabs Navigation */}
+      <div className="flex items-center gap-2 mb-6 sm:mb-8 border-b border-slate-800 pb-3 overflow-x-auto no-scrollbar max-w-full">
         {[
           { id: 'general', label: '🕌 Mosque & Contact', icon: '📞' },
           { id: 'prayer', label: '🕒 Prayer & Iqamah', icon: '⏱️' },
@@ -131,9 +132,9 @@ export default function AdminPage() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`px-4 py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition-all flex items-center gap-2 ${
+            className={`px-3.5 xs:px-4 py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition-all flex items-center gap-1.5 xs:gap-2 whitespace-nowrap shrink-0 min-h-[42px] ${
               activeTab === tab.id
-                ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md shadow-blue-500/20 font-bold'
+                ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md shadow-blue-500/20 font-bold scale-[1.02]'
                 : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
             }`}
           >
@@ -144,7 +145,7 @@ export default function AdminPage() {
       </div>
 
       {/* Tab Contents */}
-      <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl">
+      <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-2xl sm:rounded-3xl p-4 xs:p-6 md:p-8 shadow-2xl">
         {/* TAB 1: General & Contact Info */}
         {activeTab === 'general' && (
           <div className="space-y-6">
@@ -524,6 +525,11 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
+
+            {/* Offline IndexedDB Timetable CSV Importer */}
+            <div className="pt-6 border-t border-slate-800">
+              <TimetableUploader />
+            </div>
           </div>
         )}
 
@@ -624,7 +630,7 @@ export default function AdminPage() {
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-2">
                   🕌 Melodious Azan Voice Alert Audio (Fajr / Subah)
                 </label>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <input
                     type="text"
                     value={settings.azanAudio.fajrAudio}
@@ -632,20 +638,22 @@ export default function AdminPage() {
                       ...settings,
                       azanAudio: { ...settings.azanAudio, fajrAudio: e.target.value }
                     })}
-                    className="flex-1 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs font-mono focus:border-sky-400 focus:outline-none"
+                    className="flex-1 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs font-mono focus:border-sky-400 focus:outline-none min-h-[42px]"
                   />
-                  <button
-                    onClick={() => handleTestAudio(settings.azanAudio.fajrAudio)}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/30"
-                  >
-                    ▶ Test Audio
-                  </button>
-                  <button
-                    onClick={stopAzanAudio}
-                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl"
-                  >
-                    ⏹ Stop
-                  </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => handleTestAudio(settings.azanAudio.fajrAudio)}
+                      className="flex-1 sm:flex-initial px-4 py-2.5 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/30 min-h-[42px] flex items-center justify-center"
+                    >
+                      ▶ Test Audio
+                    </button>
+                    <button
+                      onClick={stopAzanAudio}
+                      className="flex-1 sm:flex-initial px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl min-h-[42px] flex items-center justify-center"
+                    >
+                      ⏹ Stop
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -653,7 +661,7 @@ export default function AdminPage() {
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-2">
                   ☀ Standard Daily Azan Voice Alert Audio (Luhar, Asr, Maghrib, Isha)
                 </label>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <input
                     type="text"
                     value={settings.azanAudio.dhuhrAudio}
@@ -667,20 +675,22 @@ export default function AdminPage() {
                         ishaAudio: e.target.value,
                       }
                     })}
-                    className="flex-1 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs font-mono focus:border-sky-400 focus:outline-none"
+                    className="flex-1 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs font-mono focus:border-sky-400 focus:outline-none min-h-[42px]"
                   />
-                  <button
-                    onClick={() => handleTestAudio(settings.azanAudio.dhuhrAudio)}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/30"
-                  >
-                    ▶ Test Audio
-                  </button>
-                  <button
-                    onClick={stopAzanAudio}
-                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl"
-                  >
-                    ⏹ Stop
-                  </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => handleTestAudio(settings.azanAudio.dhuhrAudio)}
+                      className="flex-1 sm:flex-initial px-4 py-2.5 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-600/30 min-h-[42px] flex items-center justify-center"
+                    >
+                      ▶ Test Audio
+                    </button>
+                    <button
+                      onClick={stopAzanAudio}
+                      className="flex-1 sm:flex-initial px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl min-h-[42px] flex items-center justify-center"
+                    >
+                      ⏹ Stop
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -688,7 +698,7 @@ export default function AdminPage() {
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-2">
                   📣 Automated Iqamath Voice Alert Audio (Subah, Luhar, Asr, Maghrib, Isha)
                 </label>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <input
                     type="text"
                     value={settings.azanAudio.iqamahAudio || '/audio/iqamah-alert.mp3'}
@@ -699,20 +709,22 @@ export default function AdminPage() {
                         iqamahAudio: e.target.value,
                       }
                     })}
-                    className="flex-1 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs font-mono focus:border-sky-400 focus:outline-none"
+                    className="flex-1 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs font-mono focus:border-sky-400 focus:outline-none min-h-[42px]"
                   />
-                  <button
-                    onClick={() => handleTestAudio(settings.azanAudio.iqamahAudio || '/audio/iqamah-alert.mp3')}
-                    className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-md"
-                  >
-                    ▶ Test Audio
-                  </button>
-                  <button
-                    onClick={stopAzanAudio}
-                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl"
-                  >
-                    ⏹ Stop
-                  </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => handleTestAudio(settings.azanAudio.iqamahAudio || '/audio/iqamah-alert.mp3')}
+                      className="flex-1 sm:flex-initial px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-md min-h-[42px] flex items-center justify-center"
+                    >
+                      ▶ Test Audio
+                    </button>
+                    <button
+                      onClick={stopAzanAudio}
+                      className="flex-1 sm:flex-initial px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl min-h-[42px] flex items-center justify-center"
+                    >
+                      ⏹ Stop
+                    </button>
+                  </div>
                 </div>
                 <p className="text-[11px] text-slate-400 mt-1">
                   * Note: Sunrise strictly does not trigger an Iqamath alert.
@@ -841,17 +853,17 @@ export default function AdminPage() {
                   Slideshow Wallpapers List
                 </label>
 
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <input
                     type="text"
                     placeholder="https://images.unsplash.com/..."
                     value={newSlideUrl}
                     onChange={(e) => setNewSlideUrl(e.target.value)}
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs font-mono focus:outline-none"
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs font-mono focus:outline-none min-h-[42px]"
                   />
                   <button
                     onClick={addSlideUrl}
-                    className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/30"
+                    className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/30 shrink-0 min-h-[42px] flex items-center justify-center"
                   >
                     + Add Wallpaper
                   </button>
@@ -918,17 +930,17 @@ export default function AdminPage() {
               Scrolling Bottom Announcement Ticker
             </h2>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <input
                 type="text"
                 placeholder="Enter new announcement text..."
                 value={newAnnouncement}
                 onChange={(e) => setNewAnnouncement(e.target.value)}
-                className="flex-1 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm focus:border-sky-400 focus:outline-none"
+                className="flex-1 px-4 py-3 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-sm focus:border-sky-400 focus:outline-none min-h-[44px]"
               />
               <button
                 onClick={addAnnouncement}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-black text-xs rounded-xl uppercase shadow-md shadow-blue-600/30"
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-black text-xs rounded-xl uppercase shadow-md shadow-blue-600/30 shrink-0 min-h-[44px] flex items-center justify-center"
               >
                 + Add Announcement
               </button>
@@ -957,9 +969,9 @@ export default function AdminPage() {
               Special Prayer Schedules (Jumu&apos;ah, Taraweeh, Eid)
             </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {Object.entries(settings.specialPrayers).map(([key, item]) => (
-                <div key={key} className="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-4">
+                <div key={key} className="bg-slate-950 p-4 xs:p-5 sm:p-6 rounded-2xl border border-slate-800 space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-base font-black text-sky-300 uppercase">{item.title}</span>
                     <label className="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer">

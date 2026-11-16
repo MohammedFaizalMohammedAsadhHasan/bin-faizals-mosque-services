@@ -7,6 +7,23 @@ module.exports = {
   ],
   theme: {
     extend: {
+      screens: {
+        'xs': '420px',
+        'sm': '640px',
+        'md': '768px',
+        'lg': '1024px',
+        'xl': '1280px',
+        '2xl': '1536px',
+        '3xl': '1920px',
+        '4k': '2560px',
+        'tv': '3840px',
+      },
+      spacing: {
+        'safe-top': 'env(safe-area-inset-top, 0px)',
+        'safe-bottom': 'env(safe-area-inset-bottom, 0px)',
+        'safe-left': 'env(safe-area-inset-left, 0px)',
+        'safe-right': 'env(safe-area-inset-right, 0px)',
+      },
       colors: {
         emerald: {
           950: '#021a19',

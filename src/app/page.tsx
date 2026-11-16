@@ -8,7 +8,7 @@ import { AmbientBubbles } from '@/components/ui/AmbientBubbles';
 import { resolvePrayerTimesAsync, resolvePrayerState, formatTo12Hour, PrayerTimes, PrayerState } from '@/lib/prayer/prayerEngine';
 import { getFormattedHijriDate } from '@/lib/prayer/hijriEngine';
 import { getTVSettings, saveTVSettings, SRI_LANKA_ZONES } from '@/lib/settings/settingsManager';
-import { LanguageCode, getTranslation, formatLocalizedDate, toEasternArabicNumerals, formatWithNumeralSystem, LANGUAGES } from '@/lib/i18n/i18n';
+import { LanguageCode, getTranslation, formatLocalizedDate, formatWithNumeralSystem, LANGUAGES } from '@/lib/i18n/i18n';
 
 export default function PublicHomePage() {
   const [showSplash, setShowSplash] = useState(true);
@@ -86,38 +86,41 @@ export default function PublicHomePage() {
     <>
       {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} minDurationMs={1800} />}
 
-      <div className="min-h-screen bg-[#020617] text-slate-100 relative overflow-x-hidden pb-24 md:pb-12">
+      <div
+        dir={currentLang === 'ar' ? 'rtl' : 'ltr'}
+        className="min-h-screen bg-[#020617] text-slate-100 relative overflow-x-hidden pb-28 sm:pb-12"
+      >
         {/* Ambient Bubbles Particle Canvas */}
         <AmbientBubbles />
 
-        <main className="relative z-10 p-4 sm:p-6 md:p-12 max-w-5xl mx-auto">
+        <main className="relative z-10 p-3 xs:p-4 sm:p-6 md:p-8 lg:p-10 max-w-6xl xl:max-w-7xl 3xl:max-w-[1700px] mx-auto">
           {/* Header Bar */}
-          <header className="glass-panel p-5 sm:p-6 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border border-blue-500/30 shadow-2xl">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 via-sky-500 to-indigo-600 flex items-center justify-center font-bold text-white text-2xl shadow-lg shadow-blue-500/40 shrink-0">
+          <header className="glass-panel p-4 xs:p-5 sm:p-6 rounded-3xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 sm:mb-8 border border-blue-500/30 shadow-2xl">
+            <div className="flex items-center gap-3 xs:gap-4 shrink-0">
+              <div className="w-11 h-11 xs:w-12 xs:h-12 rounded-2xl bg-gradient-to-br from-blue-500 via-sky-500 to-indigo-600 flex items-center justify-center font-bold text-white text-xl xs:text-2xl shadow-lg shadow-blue-500/40 shrink-0">
                 🕌
               </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-200 via-sky-300 to-blue-200 tracking-wide uppercase drop-shadow">
+              <div className="min-w-0">
+                <h1 className="text-xl xs:text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-sky-200 via-sky-300 to-blue-200 tracking-wide uppercase drop-shadow truncate">
                   BIN FAIZAL&apos;S
                 </h1>
-                <p className="text-xs text-sky-400 font-bold uppercase tracking-wider">
+                <p className="text-[11px] xs:text-xs text-sky-400 font-bold uppercase tracking-wider">
                   {getTranslation(currentLang, 'mosqueServices')} • {zoneLabel}
                 </p>
               </div>
             </div>
 
-            {/* Language Switcher & Quick Links */}
-            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+            {/* Language Switcher & Quick Navigation Links */}
+            <div className="flex flex-wrap items-center gap-2 xs:gap-3 w-full md:w-auto justify-between md:justify-end">
               {/* 4-Language Switcher Pills */}
-              <div className="flex items-center bg-slate-950/90 p-1 rounded-2xl border border-sky-400/30 shadow-inner">
+              <div className="flex items-center bg-slate-950/90 p-1 rounded-2xl border border-sky-400/30 shadow-inner overflow-x-auto max-w-full">
                 {LANGUAGES.map((item) => {
                   const isSelected = String(currentLang).toLowerCase() === String(item.code).toLowerCase();
                   return (
                     <button
                       key={item.code}
                       onClick={() => handleLanguageSelect(item.code)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-black tracking-wide transition-all ${
+                      className={`px-2.5 xs:px-3 py-1.5 rounded-xl text-xs font-black tracking-wide transition-all whitespace-nowrap min-h-[38px] flex items-center ${
                         isSelected
                           ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-md shadow-blue-500/30 scale-105'
                           : 'text-slate-400 hover:text-sky-300'
@@ -141,7 +144,7 @@ export default function PublicHomePage() {
                       s.numeralSystem = 'western';
                       saveTVSettings(s);
                     }}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-black tracking-wider transition-all shadow-md ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black tracking-wider transition-all shadow-md min-h-[38px] flex items-center ${
                       !arabicNumerals && numeralSystem !== 'eastern_arabic'
                         ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white border border-sky-400'
                         : 'bg-slate-900 border border-slate-700 text-slate-400 hover:text-white'
@@ -159,7 +162,7 @@ export default function PublicHomePage() {
                       s.numeralSystem = 'eastern_arabic';
                       saveTVSettings(s);
                     }}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-black tracking-wider transition-all shadow-md ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black tracking-wider transition-all shadow-md min-h-[38px] flex items-center ${
                       arabicNumerals || numeralSystem === 'eastern_arabic'
                         ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white border border-emerald-400'
                         : 'bg-slate-900 border border-slate-700 text-emerald-300 hover:text-white'
@@ -171,18 +174,19 @@ export default function PublicHomePage() {
                 </div>
               )}
 
-              <div className="hidden sm:flex gap-2">
+              {/* Top Quick Links for Tablet & Desktop */}
+              <div className="flex gap-2">
                 <Link
                   href="/tv"
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white text-xs font-bold border border-sky-400/30 transition-all shadow-lg shadow-blue-600/30 flex items-center gap-2"
+                  className="px-3 xs:px-4 py-2 xs:py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white text-xs font-bold border border-sky-400/30 transition-all shadow-lg shadow-blue-600/30 flex items-center gap-1.5 xs:gap-2 min-h-[38px]"
                 >
-                  <span>📺</span> {getTranslation(currentLang, 'launchTV')}
+                  <span>📺</span> <span className="hidden xs:inline">{getTranslation(currentLang, 'launchTV')}</span><span className="xs:hidden">TV</span>
                 </Link>
                 <Link
                   href="/admin"
-                  className="px-4 py-2.5 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-sky-300 text-xs font-bold border border-blue-500/40 transition-all shadow-lg flex items-center gap-2"
+                  className="px-3 xs:px-4 py-2 xs:py-2.5 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-sky-300 text-xs font-bold border border-blue-500/40 transition-all shadow-lg flex items-center gap-1.5 xs:gap-2 min-h-[38px]"
                 >
-                  <span>🛠</span> {getTranslation(currentLang, 'adminPortal')}
+                  <span>🛠</span> <span className="hidden xs:inline">{getTranslation(currentLang, 'adminPortal')}</span><span className="xs:hidden">Admin</span>
                 </Link>
               </div>
             </div>
@@ -190,36 +194,36 @@ export default function PublicHomePage() {
 
           {/* Hero Section */}
           {prayerState && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-stretch mb-6 sm:mb-8">
               {/* Prayer Countdown Glass Card */}
-              <div className="glass-card-hero p-8 rounded-3xl border border-sky-400/40 shadow-2xl flex flex-col justify-between">
+              <div className="glass-card-hero p-5 xs:p-6 sm:p-8 rounded-3xl border border-sky-400/40 shadow-2xl flex flex-col justify-between">
                 <div>
-                  <span className="text-xs font-black text-sky-200 tracking-widest uppercase bg-blue-950/90 px-4 py-1.5 rounded-full border border-sky-400/40 inline-block mb-4">
+                  <span className="text-[11px] xs:text-xs font-black text-sky-200 tracking-widest uppercase bg-blue-950/90 px-3 xs:px-4 py-1.5 rounded-full border border-sky-400/40 inline-block mb-3 sm:mb-4">
                     {getTranslation(currentLang, 'next').toUpperCase()}: {getPrayerName(prayerState.nextPrayer).toUpperCase()}
                   </span>
 
-                  <div className="text-5xl sm:text-6xl font-black text-sky-300 font-mono my-2 tracking-tight drop-shadow-2xl">
+                  <div className="text-4xl xs:text-5xl sm:text-6xl lg:text-7xl font-black text-sky-300 font-mono my-2 tracking-tight drop-shadow-2xl">
                     {formatSeconds(prayerState.timeRemainingSeconds)}
                   </div>
-                  <p className="text-sky-100 text-sm font-medium">
+                  <p className="text-sky-100 text-xs xs:text-sm font-medium">
                     {getTranslation(currentLang, 'iqamahNotice')}
                   </p>
                 </div>
 
-                <div className="mt-8 pt-6 border-t border-white/10 flex justify-between text-xs font-semibold">
+                <div className="mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-white/10 flex flex-col xs:flex-row justify-between gap-2.5 text-xs font-semibold">
                   <div>
-                    <span className="text-sky-300/80 block uppercase">
+                    <span className="text-sky-300/80 block uppercase text-[10px] xs:text-xs">
                       {currentLang === 'ar' ? 'التاريخ الميلادي' : currentLang === 'ta' ? 'கிரிகோரியன் திகதி' : currentLang === 'si' ? 'ග්‍රෙගෝරියානු දින දර්ශනය' : 'Gregorian Date'}
                     </span>
-                    <span className="font-bold text-white text-sm">
+                    <span className="font-bold text-white text-xs xs:text-sm">
                       {mounted ? formatLocalizedDate(new Date(), currentLang, currentLang === 'ar' && arabicNumerals) : '---'}
                     </span>
                   </div>
-                  <div className="text-right">
-                    <span className="text-sky-300/80 block uppercase">
+                  <div className="xs:text-right">
+                    <span className="text-sky-300/80 block uppercase text-[10px] xs:text-xs">
                       {currentLang === 'ar' ? 'التاريخ الهجري' : currentLang === 'ta' ? 'ஹிஜ்ரி திகதி' : currentLang === 'si' ? 'හිජ්රි දින දර්ශනය' : 'Hijri Date'}
                     </span>
-                    <span className="font-bold text-sky-300 font-arabic text-sm">{hijriDateStr || '---'}</span>
+                    <span className="font-bold text-sky-300 font-arabic text-xs xs:text-sm">{hijriDateStr || '---'}</span>
                   </div>
                 </div>
               </div>
@@ -231,10 +235,10 @@ export default function PublicHomePage() {
 
           {/* Today's Timetable List */}
           {times && prayerState && (
-            <section className="glass-panel p-6 sm:p-8 rounded-3xl mb-8 border border-slate-800 shadow-2xl">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-6">
+            <section className="glass-panel p-4 xs:p-6 sm:p-8 rounded-3xl mb-6 sm:mb-8 border border-slate-800 shadow-2xl">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 sm:mb-6">
                 <div>
-                  <h3 className="text-lg sm:text-xl font-black text-slate-100 uppercase tracking-wide">
+                  <h3 className="text-base xs:text-lg sm:text-xl font-black text-slate-100 uppercase tracking-wide">
                     {getTranslation(currentLang, 'todaySchedule')}
                   </h3>
                   <p className="text-xs text-slate-400 font-semibold">
@@ -250,7 +254,8 @@ export default function PublicHomePage() {
                 </a>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-5">
+              {/* Responsive 1 / 2 / 3 / 6 Column Prayer Cards Grid */}
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 xs:gap-4 sm:gap-5">
                 {[
                   { key: 'fajr', name: getTranslation(currentLang, 'fajr'), azan: times.fajr, iqamah: '+20 mins' },
                   { key: 'sunrise', name: getTranslation(currentLang, 'sunrise'), azan: times.sunrise, iqamah: '-' },
@@ -263,27 +268,36 @@ export default function PublicHomePage() {
                   return (
                     <div
                       key={item.key}
-                      className={`p-5 sm:p-6 rounded-2xl border transition-all shadow-xl ${
+                      className={`p-4 xs:p-5 sm:p-6 rounded-2xl border transition-all shadow-xl flex flex-col justify-between ${
                         isActive
-                          ? 'glass-card-active pulse-royal border-sky-400'
+                          ? 'glass-card-active pulse-royal border-sky-400 ring-2 ring-sky-400/30'
                           : 'glass-card-inactive border-white/10'
                       }`}
                     >
-                      <div className={`text-base sm:text-lg xl:text-xl font-black uppercase tracking-wider ${
-                        currentLang === 'ar' ? 'font-arabic' : ''
-                      } ${isActive ? 'text-sky-300' : 'text-slate-100'}`}>
-                        {item.name}
+                      <div className="flex justify-between items-center gap-1">
+                        <span className={`text-sm xs:text-base sm:text-lg font-black uppercase tracking-wider truncate ${
+                          currentLang === 'ar' ? 'font-arabic' : ''
+                        } ${isActive ? 'text-sky-300' : 'text-slate-100'}`}>
+                          {item.name}
+                        </span>
+                        {isActive && (
+                          <span className="px-2 py-0.5 text-white text-[9px] xs:text-[10px] font-black tracking-wider rounded-full uppercase bg-blue-600 shadow-md shrink-0">
+                            {getTranslation(currentLang, 'next')}
+                          </span>
+                        )}
                       </div>
-                      <div className={`text-3xl sm:text-4xl lg:text-5xl font-black font-mono my-2.5 ${isActive ? 'text-sky-300 drop-shadow-xl' : 'text-white'}`}>
+
+                      <div className={`text-2xl xs:text-3xl sm:text-3xl lg:text-4xl font-black font-mono my-2 sm:my-3 ${isActive ? 'text-sky-300 drop-shadow-xl' : 'text-white'}`}>
                         {formatPrayerTime(item.azan)}
                       </div>
+
                       {item.key === 'sunrise' ? (
-                        <div className="text-xs sm:text-sm text-amber-300 font-bold border-t border-white/10 pt-2.5 text-center font-mono">
-                          🌅 Duha / Ishraq • No Iqamath Required
+                        <div className="text-[11px] xs:text-xs text-amber-300 font-bold border-t border-white/10 pt-2 text-center font-mono">
+                          🌅 Duha / Ishraq
                         </div>
                       ) : (
-                        <div className="text-xs sm:text-sm text-slate-300 font-bold border-t border-white/10 pt-2.5 flex justify-between items-center">
-                          <span className="uppercase text-slate-400 text-[11px] font-black">{getTranslation(currentLang, 'iqamah')}</span>
+                        <div className="text-[11px] xs:text-xs text-slate-300 font-bold border-t border-white/10 pt-2 flex justify-between items-center">
+                          <span className="uppercase text-slate-400 text-[10px] font-black">{getTranslation(currentLang, 'iqamah')}</span>
                           <span className="font-mono text-sky-400 font-bold">{item.iqamah}</span>
                         </div>
                       )}
@@ -295,11 +309,11 @@ export default function PublicHomePage() {
           )}
 
           {/* Announcements & Hadith */}
-          <section className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-2xl">
-            <h3 className="text-lg font-black text-sky-300 uppercase tracking-wide mb-4">
+          <section className="glass-panel p-4 xs:p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-2xl">
+            <h3 className="text-base xs:text-lg font-black text-sky-300 uppercase tracking-wide mb-3 sm:mb-4">
               📖 {getTranslation(currentLang, 'announcements')}
             </h3>
-            <blockquote className="p-4 rounded-2xl bg-slate-900/80 border-l-4 border-sky-400 italic text-slate-200 text-sm leading-relaxed mb-4">
+            <blockquote className="p-3.5 xs:p-4 rounded-2xl bg-slate-900/80 border-l-4 border-sky-400 italic text-slate-200 text-xs xs:text-sm leading-relaxed mb-3 sm:mb-4">
               {currentLang === 'ar' ? (
                 <span>&ldquo;خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ&rdquo;</span>
               ) : currentLang === 'ta' ? (
@@ -316,17 +330,17 @@ export default function PublicHomePage() {
           </section>
         </main>
 
-        {/* Mobile Responsive Bottom Navigation Bar */}
-        <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#030712]/95 backdrop-blur-xl border-t border-slate-800 px-6 py-3 flex justify-between items-center text-xs font-bold shadow-2xl">
-          <Link href="/" className="flex flex-col items-center gap-1 text-sky-400">
+        {/* Mobile Responsive Bottom Navigation Bar with Safe Area Inset */}
+        <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#030712]/95 backdrop-blur-xl border-t border-slate-800 px-6 pt-2.5 pb-[max(env(safe-area-inset-bottom,0px),0.75rem)] flex justify-between items-center text-xs font-bold shadow-2xl">
+          <Link href="/" className="flex flex-col items-center gap-1 text-sky-400 min-h-[44px] justify-center">
             <span className="text-lg">🕌</span>
             <span>{currentLang === 'ar' ? 'الرئيسية' : currentLang === 'ta' ? 'முகப்பு' : currentLang === 'si' ? 'මුල් පිටුව' : 'Home'}</span>
           </Link>
-          <Link href="/tv" className="flex flex-col items-center gap-1 text-slate-400 hover:text-sky-400">
+          <Link href="/tv" className="flex flex-col items-center gap-1 text-slate-400 hover:text-sky-400 min-h-[44px] justify-center">
             <span className="text-lg">📺</span>
             <span>{currentLang === 'ar' ? 'الشاشة' : currentLang === 'ta' ? 'டிவி' : currentLang === 'si' ? 'රූපවාහිනිය' : 'TV View'}</span>
           </Link>
-          <Link href="/admin" className="flex flex-col items-center gap-1 text-slate-400 hover:text-sky-400">
+          <Link href="/admin" className="flex flex-col items-center gap-1 text-slate-400 hover:text-sky-400 min-h-[44px] justify-center">
             <span className="text-lg">🛠</span>
             <span>{currentLang === 'ar' ? 'الإدارة' : currentLang === 'ta' ? 'நிர்வாகம்' : currentLang === 'si' ? 'පරිපාලක' : 'Admin'}</span>
           </Link>
