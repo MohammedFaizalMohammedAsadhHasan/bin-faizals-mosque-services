@@ -613,7 +613,7 @@ export const TVDisplay: React.FC = () => {
               🕌
             </div>
             <div className="min-w-0">
-              <h1 className={`text-[clamp(1rem,4vw,2rem)] sm:text-[clamp(1.25rem,4vw,2.5rem)] md:text-[clamp(1.5rem,4vw,3rem)] lg:text-[clamp(1.75rem,4vw,3.5rem)] xl:text-[clamp(2rem,4vw,4rem)] 2xl:text-[clamp(2.25rem,4vw,4.5rem)] 3xl:text-[clamp(2.5rem,4vw,5rem)] font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r ${activeFontTheme.brandTitle} uppercase drop-shadow-md transition-all duration-1000 overflow-hidden whitespace-normal sm:whitespace-nowrap leading-none truncate`}>
+              <h1 className={`text-sm sm:text-lg lg:text-xl xl:text-2xl 3xl:text-3xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r ${activeFontTheme.brandTitle} uppercase drop-shadow-md transition-all duration-1000 whitespace-nowrap leading-none truncate`}>
                 {settings.mosqueName}
               </h1>
               <div className="mt-1 flex items-center">
@@ -625,7 +625,7 @@ export const TVDisplay: React.FC = () => {
           </div>
 
           {/* Center Actions: Fullscreen, Language Switcher & Automatic Voice Alert Arm Indicator */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 shrink-0">
             {/* TV Fullscreen Kiosk Mode Button */}
             <button
               onClick={toggleFullscreen}
@@ -737,7 +737,7 @@ export const TVDisplay: React.FC = () => {
                 )}
             </div>
             <div className="h-10 sm:h-14 md:h-16 lg:h-20 w-px bg-slate-700/60 hidden sm:block" />
-            <div className="text-right hidden sm:block whitespace-nowrap shrink-0">
+            <div className="text-right flex flex-col sm:flex-row items-end gap-1 sm:gap-2 whitespace-normal sm:whitespace-nowrap shrink-0">
               <div className="text-[10px] sm:text-xs md:text-sm xl:text-base font-bold text-slate-200 uppercase tracking-wide leading-tight">
                 {mounted
                   ? formatLocalizedDate(
