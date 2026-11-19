@@ -747,7 +747,9 @@ export const TVDisplay: React.FC = () => {
                 ? (() => {
                     const nextKey = prayerState.nextPrayer;
                     const todayTimes = getTodayPrayerTimes() as unknown as Record<string, Date>;
-                    const nextTime = todayTimes[nextKey] || new Date();
+                    const rawNext = todayTimes[nextKey];
+                    const nextTime = rawNext instanceof Date ? rawNext : new Date(rawNext);
+
                     const now = new Date();
                     const diffMs = Math.max(0, nextTime.getTime() - now.getTime());
                     const totalSec = Math.floor(diffMs / 1000);
