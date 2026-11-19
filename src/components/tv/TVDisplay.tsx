@@ -166,6 +166,46 @@ function parseTimeToMinutes(timeStr?: string): number | null {
   const langMenuRef = useRef<HTMLDivElement>(null);
   const langButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Number size levels: 0=small … 4=largest
+  const SIZE_LEVELS = [
+    'text-2xl sm:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl',
+    'text-3xl sm:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl',
+    'text-4xl sm:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl',
+    'text-5xl sm:text-7xl lg:text-8xl xl:text-9xl 2xl:text-9xl',
+    'text-6xl sm:text-8xl lg:text-9xl xl:text-9xl 2xl:text-9xl',
+  ];
+  const IQAMAH_SIZE_LEVELS = [
+    'text-sm sm:text-base',
+    'text-base sm:text-lg',
+    'text-lg sm:text-xl',
+    'text-xl sm:text-2xl',
+    'text-2xl sm:text-3xl',
+  ];
+  const [clockSize, setClockSize] = useState<number>(() => {
+    if (typeof window === 'undefined') return 2;
+    return parseInt(localStorage.getItem('tv_clockSize') ?? '2', 10);
+  });
+  const [countdownSize, setCountdownSize] = useState<number>(() => {
+    if (typeof window === 'undefined') return 2;
+    return parseInt(localStorage.getItem('tv_countdownSize') ?? '2', 10);
+  });
+  const [iqamahSize, setIqamahSize] = useState<number>(() => {
+    if (typeof window === 'undefined') return 1;
+    return parseInt(localStorage.getItem('tv_iqamahSize') ?? '1', 10);
+  });
+  const changeSize = (key: 'clock' | 'countdown' | 'iqamah', delta: number) => {
+    if (key === 'clock') {
+      const v = Math.max(0, Math.min(4, clockSize + delta));
+      setClockSize(v); localStorage.setItem('tv_clockSize', String(v));
+    } else if (key === 'countdown') {
+      const v = Math.max(0, Math.min(4, countdownSize + delta));
+      setCountdownSize(v); localStorage.setItem('tv_countdownSize', String(v));
+    } else {
+      const v = Math.max(0, Math.min(4, iqamahSize + delta));
+      setIqamahSize(v); localStorage.setItem('tv_iqamahSize', String(v));
+    }
+  };
+
   const toggleLangMenu = () => {
     if (!showLangMenu && langButtonRef.current) {
       const rect = langButtonRef.current.getBoundingClientRect();
@@ -701,7 +741,7 @@ function parseTimeToMinutes(timeStr?: string): number | null {
 
           {/* Live Clock & Dates */}
           <div className="text-right flex items-center gap-2 sm:gap-4 shrink-0">
-            <div className="text-4xl sm:text-7xl lg:text-9xl xl:text-9xl 2xl:text-9xl 3xl:text-9xl tv:text-9xl font-black font-mono tracking-tight my-1 leading-none transition-all duration-1000 text-purple-300 drop-shadow-[0_0_35px_rgba(192,132,252,0.85)]">
+            <div className={`${SIZE_LEVELS[clockSize]} font-black font-mono tracking-tight my-1 leading-none transition-all duration-1000 text-purple-300 drop-shadow-[0_0_35px_rgba(192,132,252,0.85)]`}>
               {mounted
                 ? (() => {
                     const nextKey = prayerState.nextPrayer;
@@ -876,7 +916,7 @@ function parseTimeToMinutes(timeStr?: string): number | null {
                   {t('countdownTo')} {(t(prayerState.nextPrayer) || prayerState.nextPrayer).toUpperCase()}
                 </span>
 
-                <div className={`text-3xl sm:text-5xl lg:text-5xl xl:text-6xl 2xl:text-7xl 3xl:text-8xl tv:text-9xl font-black font-mono tracking-tight my-1 leading-none transition-all duration-1000 ${activeFontTheme.countdownGlow}`}>
+                <div className={`${SIZE_LEVELS[countdownSize]} font-black font-mono tracking-tight my-1 leading-none transition-all duration-1000 ${activeFontTheme.countdownGlow}`}>
                   {formatSeconds(prayerState.timeRemainingSeconds)}
                 </div>
 
@@ -910,13 +950,13 @@ function parseTimeToMinutes(timeStr?: string): number | null {
                 <div className="grid grid-cols-2 gap-2 my-1">
                   <div className="bg-slate-900/80 p-2 rounded-xl border border-white/5">
                     <span className="text-[10px] uppercase font-bold text-slate-400 block">Next Azan Call</span>
-                    <span className="text-base sm:text-lg font-black font-mono text-white">
+                    <span className={`${IQAMAH_SIZE_LEVELS[iqamahSize]} font-black font-mono text-white`}>
                       {formatDisplayTime((prayerTimes as any)?.[prayerState.nextPrayer])}
                     </span>
                   </div>
                   <div className="bg-slate-900/80 p-2 rounded-xl border border-white/5">
                     <span className="text-[10px] uppercase font-bold text-slate-400 block">Next Iqamath Call</span>
-                    <span className="text-base sm:text-lg font-black font-mono text-sky-300">
+                    <span className={`${IQAMAH_SIZE_LEVELS[iqamahSize]} font-black font-mono text-sky-300`}>
                       {prayerState.nextPrayer !== 'sunrise'
                         ? computeIqamahTimeStr(prayerState.nextPrayer as any, (prayerTimes as any)?.[prayerState.nextPrayer]).formatted
                         : 'No Iqamah'}
@@ -1246,6 +1286,35 @@ function parseTimeToMinutes(timeStr?: string): number | null {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Number Sizes Section */}
+              <div className="bg-slate-900/90 p-4 rounded-2xl border border-slate-800 space-y-3">
+                <label className="text-xs font-bold text-sky-300 uppercase flex items-center gap-2 mb-1">
+                  <span>🔢</span> Number Sizes
+                </label>
+                {([
+                  { label: '🕐 Live Clock', key: 'clock' as const, value: clockSize },
+                  { label: '⏱️ Countdown', key: 'countdown' as const, value: countdownSize },
+                  { label: '🕌 Iqamah Time', key: 'iqamah' as const, value: iqamahSize },
+                ] as const).map(({ label, key, value }) => (
+                  <div key={key} className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-300">{label}</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => changeSize(key, -1)}
+                        disabled={value === 0}
+                        className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-white font-black text-base flex items-center justify-center transition-all border border-slate-700"
+                      >−</button>
+                      <span className="w-6 text-center text-xs font-black text-sky-300 font-mono">{value + 1}/5</span>
+                      <button
+                        onClick={() => changeSize(key, 1)}
+                        disabled={value === 4}
+                        className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-white font-black text-base flex items-center justify-center transition-all border border-slate-700"
+                      >+</button>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               {/* Action Buttons */}
