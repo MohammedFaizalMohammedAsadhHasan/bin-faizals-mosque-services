@@ -746,9 +746,21 @@ export const TVDisplay: React.FC = () => {
               {mounted
                 ? (() => {
                     const nextKey = prayerState.nextPrayer;
-                    const todayTimes = getTodayPrayerTimes() as unknown as Record<string, Date>;
+                    const todayTimes = getTodayPrayerTimes() as unknown as Record<string, string>;
                     const rawNext = todayTimes[nextKey];
-                    const nextTime = rawNext instanceof Date ? rawNext : new Date(rawNext);
+                    // Ensure we always have a Date object – fallback to now if missing
+                    let nextTime: Date;
+                    if (typeof rawNext === 'string') {
+                      const [h, m] = rawNext.split(':');
+                      const d = new Date();
+                      d.setHours(parseInt(h, 10), parseInt(m, 10), 0, 0);
+                      nextTime = d;
+                    } else if (rawNext instanceof Date) {
+                      nextTime = rawNext;
+                    } else {
+                      // No next time available – use current time so countdown shows 00:00:00
+                      nextTime = new Date();
+                    }
 
                     const now = new Date();
                     const diffMs = Math.max(0, nextTime.getTime() - now.getTime());
@@ -762,11 +774,11 @@ export const TVDisplay: React.FC = () => {
 
                     return (
                       <span className="inline-flex items-baseline">
-                        <span className="h">{formattedH}</span>
-                        <span className="colon colon-main mx-0.5">:</span>
-                        <span className="m">{formattedM}</span>
-                        <span className="colon colon-sec text-[0.45em] opacity-80 ml-1 font-mono font-bold">:</span>
-                        <span className="s text-[0.45em] opacity-80 font-mono font-bold">{formattedS}</span>
+                        <span className="h text-5xl md:text-6xl">{formattedH}</span>
+                        <span className="colon colon-main mx-0.5 text-5xl md:text-6xl">:</span>
+                        <span className="m text-5xl md:text-6xl">{formattedM}</span>
+                        <span className="colon colon-sec text-[0.45em] opacity-80 ml-1 font-mono font-bold text-5xl md:text-6xl">:</span>
+                        <span className="s text-[0.45em] opacity-80 font-mono font-bold text-5xl md:text-6xl">{formattedS}</span>
                       </span>
                     );
                   })()
