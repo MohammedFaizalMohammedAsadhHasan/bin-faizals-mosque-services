@@ -701,7 +701,7 @@ function parseTimeToMinutes(timeStr?: string): number | null {
 
           {/* Live Clock & Dates */}
           <div className="text-right flex items-center gap-2 sm:gap-4 shrink-0">
-            <div className="text-3xl sm:text-5xl lg:text-5xl xl:text-6xl 2xl:text-7xl 3xl:text-8xl tv:text-9xl font-black font-mono tracking-tight my-1 leading-none transition-all duration-1000 text-purple-300 drop-shadow-[0_0_35px_rgba(192,132,252,0.85)]">
+            <div className="text-4xl sm:text-7xl lg:text-9xl xl:text-9xl 2xl:text-9xl 3xl:text-9xl tv:text-9xl font-black font-mono tracking-tight my-1 leading-none transition-all duration-1000 text-purple-300 drop-shadow-[0_0_35px_rgba(192,132,252,0.85)]">
               {mounted
                 ? (() => {
                     const nextKey = prayerState.nextPrayer;
@@ -738,7 +738,7 @@ function parseTimeToMinutes(timeStr?: string): number | null {
             </div>
             <div className="h-10 sm:h-14 md:h-16 lg:h-20 w-px bg-slate-700/60 hidden sm:block" />
             <div className="text-right flex flex-col items-end gap-1 shrink-0">
-              <div className="text-base sm:text-lg md:text-xl xl:text-2xl font-bold text-slate-200 uppercase tracking-wide leading-tight">
+              <div className="text-[10px] sm:text-xs md:text-sm xl:text-base font-bold text-slate-200 uppercase tracking-wide leading-tight">
                 {mounted
                   ? formatLocalizedDate(
                       time,
