@@ -140,7 +140,23 @@ function parseTimeToMinutes(timeStr?: string): number | null {
   return h * 60 + m;
 }
 
-{/* trigger redeploy */}
+// Number size levels: 0=small … 4=largest
+const SIZE_LEVELS: string[] = [
+  'text-2xl sm:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl',
+  'text-3xl sm:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl',
+  'text-4xl sm:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl',
+  'text-5xl sm:text-7xl lg:text-8xl xl:text-9xl 2xl:text-9xl',
+  'text-6xl sm:text-8xl lg:text-9xl xl:text-9xl 2xl:text-9xl',
+];
+const IQAMAH_SIZE_LEVELS: string[] = [
+  'text-sm sm:text-base',
+  'text-base sm:text-lg',
+  'text-lg sm:text-xl',
+  'text-xl sm:text-2xl',
+  'text-2xl sm:text-3xl',
+];
+
+export const TVDisplay: React.FC = () => {
   const [settings, setSettings] = useState<TVSettings>(DEFAULT_SETTINGS);
   const [showSplash, setShowSplash] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -166,21 +182,6 @@ function parseTimeToMinutes(timeStr?: string): number | null {
   const langMenuRef = useRef<HTMLDivElement>(null);
   const langButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Number size levels: 0=small … 4=largest
-  const SIZE_LEVELS = [
-    'text-2xl sm:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl',
-    'text-3xl sm:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl',
-    'text-4xl sm:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl',
-    'text-5xl sm:text-7xl lg:text-8xl xl:text-9xl 2xl:text-9xl',
-    'text-6xl sm:text-8xl lg:text-9xl xl:text-9xl 2xl:text-9xl',
-  ];
-  const IQAMAH_SIZE_LEVELS = [
-    'text-sm sm:text-base',
-    'text-base sm:text-lg',
-    'text-lg sm:text-xl',
-    'text-xl sm:text-2xl',
-    'text-2xl sm:text-3xl',
-  ];
   const [clockSize, setClockSize] = useState<number>(() => {
     if (typeof window === 'undefined') return 2;
     return parseInt(localStorage.getItem('tv_clockSize') ?? '2', 10);
@@ -745,7 +746,8 @@ function parseTimeToMinutes(timeStr?: string): number | null {
               {mounted
                 ? (() => {
                     const nextKey = prayerState.nextPrayer;
-                    const nextTime = getTodayPrayerTimes()[nextKey as keyof typeof getTodayPrayerTimes()];
+                    const todayTimes = getTodayPrayerTimes() as unknown as Record<string, Date>;
+                    const nextTime = todayTimes[nextKey] || new Date();
                     const now = new Date();
                     const diffMs = Math.max(0, nextTime.getTime() - now.getTime());
                     const totalSec = Math.floor(diffMs / 1000);
@@ -1293,11 +1295,13 @@ function parseTimeToMinutes(timeStr?: string): number | null {
                 <label className="text-xs font-bold text-sky-300 uppercase flex items-center gap-2 mb-1">
                   <span>🔢</span> Number Sizes
                 </label>
-                {([
-                  { label: '🕐 Live Clock', key: 'clock' as const, value: clockSize },
-                  { label: '⏱️ Countdown', key: 'countdown' as const, value: countdownSize },
-                  { label: '🕌 Iqamah Time', key: 'iqamah' as const, value: iqamahSize },
-                ] as const).map(({ label, key, value }) => (
+                {(
+                  [
+                    { label: '🕐 Live Clock', key: 'clock', value: clockSize },
+                    { label: '⏱️ Countdown', key: 'countdown', value: countdownSize },
+                    { label: '🕌 Iqamah Time', key: 'iqamah', value: iqamahSize },
+                  ] as { label: string; key: 'clock' | 'countdown' | 'iqamah'; value: number }[]
+                ).map(({ label, key, value }) => (
                   <div key={key} className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-300">{label}</span>
                     <div className="flex items-center gap-2">
