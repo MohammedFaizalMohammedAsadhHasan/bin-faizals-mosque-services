@@ -140,7 +140,7 @@ function parseTimeToMinutes(timeStr?: string): number | null {
   return h * 60 + m;
 }
 
-export const TVDisplay: React.FC = () => {
+{/* trigger redeploy */}
   const [settings, setSettings] = useState<TVSettings>(DEFAULT_SETTINGS);
   const [showSplash, setShowSplash] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -737,8 +737,8 @@ export const TVDisplay: React.FC = () => {
                 )}
             </div>
             <div className="h-10 sm:h-14 md:h-16 lg:h-20 w-px bg-slate-700/60 hidden sm:block" />
-            <div className="text-right flex flex-col sm:flex-row items-end gap-1 sm:gap-2 whitespace-normal sm:whitespace-nowrap shrink-0">
-              <div className="text-[10px] sm:text-xs md:text-sm xl:text-base font-bold text-slate-200 uppercase tracking-wide leading-tight">
+            <div className="text-right flex flex-col items-end gap-1 shrink-0">
+              <div className="text-base sm:text-lg md:text-xl xl:text-2xl font-bold text-slate-200 uppercase tracking-wide leading-tight">
                 {mounted
                   ? formatLocalizedDate(
                       time,
