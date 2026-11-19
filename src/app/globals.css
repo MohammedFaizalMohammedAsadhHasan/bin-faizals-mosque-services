@@ -232,6 +232,7 @@ body {
 
 .colon-sec {
   display: inline-block;
+  animation: colon-blink 1s steps(1, start) infinite;
 }
 
 /* Accessible High-Contrast TV & Remote Focus Ring */
