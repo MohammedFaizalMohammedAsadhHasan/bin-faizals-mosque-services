@@ -745,33 +745,13 @@ export const TVDisplay: React.FC = () => {
             <div className={`${SIZE_LEVELS[clockSize]} font-black font-mono tracking-tight my-1 leading-none transition-all duration-1000 text-purple-300 drop-shadow-[0_0_35px_rgba(192,132,252,0.85)]`}>
               {mounted
                 ? (() => {
-                    const nextKey = prayerState.nextPrayer;
-                    const todayTimes = getTodayPrayerTimes() as unknown as Record<string, string>;
-                    const rawNext = todayTimes[nextKey];
-                    // Ensure we always have a Date object – fallback to now if missing
-                    let nextTime: Date;
-                    if (typeof rawNext === 'string') {
-                      const [h, m] = rawNext.split(':');
-                      const d = new Date();
-                      d.setHours(parseInt(h, 10), parseInt(m, 10), 0, 0);
-                      nextTime = d;
-                    } else if (rawNext instanceof Date) {
-                      nextTime = rawNext;
-                    } else {
-                      // No next time available – use current time so countdown shows 00:00:00
-                      nextTime = new Date();
-                    }
-
                     const now = new Date();
-                    const diffMs = Math.max(0, nextTime.getTime() - now.getTime());
-                    const totalSec = Math.floor(diffMs / 1000);
-                    const cdH = Math.floor(totalSec / 3600).toString().padStart(2, '0');
-                    const cdM = Math.floor((totalSec % 3600) / 60).toString().padStart(2, '0');
-                    const cdS = (totalSec % 60).toString().padStart(2, '0');
-                    const formattedH = formatWithNumeralSystem(cdH, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
-                    const formattedM = formatWithNumeralSystem(cdM, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
-                    const formattedS = formatWithNumeralSystem(cdS, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
-
+                    const hh = now.getHours().toString().padStart(2, '0');
+                    const mm = now.getMinutes().toString().padStart(2, '0');
+                    const ss = now.getSeconds().toString().padStart(2, '0');
+                    const formattedH = formatWithNumeralSystem(hh, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
+                    const formattedM = formatWithNumeralSystem(mm, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
+                    const formattedS = formatWithNumeralSystem(ss, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
                     return (
                       <span className="inline-flex items-baseline">
                         <span className="h text-5xl md:text-6xl">{formattedH}</span>
