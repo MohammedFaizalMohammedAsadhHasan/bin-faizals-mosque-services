@@ -29,20 +29,19 @@ export interface PrayerState {
  * Converts 24-hour time string (HH:mm) to 12-hour format (hh:mm AM/PM)
  */
 export function formatTo12Hour(timeStr: string, includeAmPm: boolean = true): string {
-  if (!timeStr || timeStr === '-') return timeStr;
-  const parts = timeStr.split(':');
-  if (parts.length < 2) return timeStr;
-
+  if (!timeStr || timeStr === '-' || !/^\d{1,2}:\d{2}$/.test(timeStr.trim())) return '--:--';
+  const parts = timeStr.trim().split(':');
   let h = parseInt(parts[0], 10);
-  const m = parts[1];
-  if (isNaN(h)) return timeStr;
+  const m = parseInt(parts[1], 10);
+  if (!Number.isFinite(h) || !Number.isFinite(m) || h < 0 || h > 23 || m < 0 || m > 59) return '--:--';
 
   const ampm = h >= 12 ? 'PM' : 'AM';
   h = h % 12;
   if (h === 0) h = 12;
 
   const formattedH = h.toString().padStart(2, '0');
-  return includeAmPm ? `${formattedH}:${m} ${ampm}` : `${formattedH}:${m}`;
+  const formattedM = m.toString().padStart(2, '0');
+  return includeAmPm ? `${formattedH}:${formattedM} ${ampm}` : `${formattedH}:${formattedM}`;
 }
 
 /**
@@ -66,7 +65,13 @@ export function adjustTimeString(timeStr: string, minutesToAdd: number): string 
  * Calculates time remaining in seconds until target time HH:mm
  */
 export function getSecondsUntil(targetTimeStr: string, now: Date = new Date()): number {
+  if (!targetTimeStr || targetTimeStr === '-' || !/^\d{1,2}:\d{2}$/.test(targetTimeStr.trim())) {
+    return 0;
+  }
   const [hours, minutes] = targetTimeStr.split(':').map(Number);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    return 0;
+  }
   const target = new Date(now);
   target.setHours(hours, minutes, 0, 0);
 
@@ -77,7 +82,8 @@ export function getSecondsUntil(targetTimeStr: string, now: Date = new Date()): 
     diffMs = target.getTime() - now.getTime();
   }
 
-  return Math.floor(diffMs / 1000);
+  const seconds = Math.floor(diffMs / 1000);
+  return Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
 }
 
 /**
@@ -133,20 +139,22 @@ export function resolvePrayerState(times?: PrayerTimes, now: Date = new Date()):
   const activeTimes = times || getTodayPrayerTimes(now);
 
   const timeToMinutes = (timeStr: string) => {
+    if (!timeStr || !/^\d{1,2}:\d{2}$/.test(timeStr.trim())) return Number.NaN;
     const [h, m] = timeStr.split(':').map(Number);
+    if (!Number.isFinite(h) || !Number.isFinite(m) || h < 0 || h > 23 || m < 0 || m > 59) return Number.NaN;
     return h * 60 + m;
   };
 
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-  const schedule: { name: keyof PrayerTimes; minutes: number; timeStr: string }[] = [
+  const schedule: { name: keyof PrayerTimes; minutes: number; timeStr: string }[] = ([
     { name: 'fajr', minutes: timeToMinutes(activeTimes.fajr), timeStr: activeTimes.fajr },
     { name: 'sunrise', minutes: timeToMinutes(activeTimes.sunrise), timeStr: activeTimes.sunrise },
     { name: 'dhuhr', minutes: timeToMinutes(activeTimes.dhuhr), timeStr: activeTimes.dhuhr },
     { name: 'asr', minutes: timeToMinutes(activeTimes.asr), timeStr: activeTimes.asr },
     { name: 'maghrib', minutes: timeToMinutes(activeTimes.maghrib), timeStr: activeTimes.maghrib },
     { name: 'isha', minutes: timeToMinutes(activeTimes.isha), timeStr: activeTimes.isha },
-  ];
+  ] as { name: keyof PrayerTimes; minutes: number; timeStr: string }[]).filter((entry) => Number.isFinite(entry.minutes));
 
   let currentPrayer: keyof PrayerTimes = 'isha';
   let nextPrayer: keyof PrayerTimes = 'fajr';
@@ -167,7 +175,7 @@ export function resolvePrayerState(times?: PrayerTimes, now: Date = new Date()):
     currentPrayer,
     nextPrayer,
     timeRemainingSeconds: secondsRemaining,
-    isAzanActive: secondsRemaining >= 0 && secondsRemaining <= 180, // 3-minute Azan window
+    isAzanActive: secondsRemaining >= 0 && secondsRemaining <= 180,
     isIqamahActive: false,
   };
 }

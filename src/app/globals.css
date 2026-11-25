@@ -35,7 +35,7 @@ body {
 }
 
 /* TV Container Layout Rules */
-@media (min-width: 1024px) or (orientation: landscape) {
+@media (min-width: 1024px) and (min-height: 600px) {
   body:has(.tv-container) {
     height: 100vh;
     height: 100dvh;
@@ -52,7 +52,7 @@ body {
   }
 }
 
-@media (max-width: 1023px) and (orientation: portrait) {
+@media (max-width: 1023px), (max-height: 599px) {
   body:has(.tv-container) {
     min-height: 100dvh;
     overflow-y: auto;
@@ -62,7 +62,7 @@ body {
   .tv-container {
     min-height: 100dvh;
     height: auto;
-    width: 100vw;
+    width: 100%;
     overflow-y: auto;
     overflow-x: hidden;
   }

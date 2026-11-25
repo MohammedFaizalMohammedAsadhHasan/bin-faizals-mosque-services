@@ -65,9 +65,13 @@ export default function PublicHomePage() {
   };
 
   const formatSeconds = (sec: number) => {
-    const hrs = Math.floor(sec / 3600);
-    const mins = Math.floor((sec % 3600) / 60);
-    const secs = sec % 60;
+    if (!Number.isFinite(sec) || sec < 0) {
+      return formatWithNumeralSystem('00:00:00', numeralSystem, currentLang === 'ar', arabicNumerals);
+    }
+    const safeSec = Math.floor(sec);
+    const hrs = Math.floor(safeSec / 3600);
+    const mins = Math.floor((safeSec % 3600) / 60);
+    const secs = safeSec % 60;
     const raw = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     return formatWithNumeralSystem(raw, numeralSystem, currentLang === 'ar', arabicNumerals);
   };

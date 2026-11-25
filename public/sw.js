@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bin-faizal-mosque-v2';
+const CACHE_NAME = 'bin-faizal-mosque-v3';
 const STATIC_ASSETS = [
   '/',
   '/tv',

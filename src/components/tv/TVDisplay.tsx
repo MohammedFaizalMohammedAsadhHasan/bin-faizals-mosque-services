@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import {
   resolvePrayerState,
@@ -141,12 +140,19 @@ function parseTimeToMinutes(timeStr?: string): number | null {
 }
 
 // Number size levels: 0=small … 4=largest
+const CLOCK_SIZE_LEVELS: string[] = [
+  'text-lg xs:text-xl sm:text-2xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl',
+  'text-xl xs:text-2xl sm:text-3xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-5xl',
+  'text-2xl xs:text-3xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl 2xl:text-6xl',
+  'text-2xl xs:text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl',
+  'text-3xl xs:text-4xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl',
+];
 const SIZE_LEVELS: string[] = [
   'text-2xl sm:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl',
   'text-3xl sm:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl',
-  'text-4xl sm:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl',
+  'text-4xl sm:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl',
+  'text-5xl sm:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl',
   'text-5xl sm:text-7xl lg:text-8xl xl:text-9xl 2xl:text-9xl',
-  'text-6xl sm:text-8xl lg:text-9xl xl:text-9xl 2xl:text-9xl',
 ];
 const IQAMAH_SIZE_LEVELS: string[] = [
   'text-sm sm:text-base',
@@ -156,19 +162,22 @@ const IQAMAH_SIZE_LEVELS: string[] = [
   'text-2xl sm:text-3xl',
 ];
 
+function parseClampedSize(raw: string | null, fallback: number): number {
+  if (raw === null) return fallback;
+  const parsed = parseInt(raw, 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(0, Math.min(4, parsed));
+}
+
 export const TVDisplay: React.FC = () => {
   const [settings, setSettings] = useState<TVSettings>(DEFAULT_SETTINGS);
   const [showSplash, setShowSplash] = useState(true);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const [time, setTime] = useState<Date>(() => new Date());
-  const [prayerTimes, setPrayerTimes] = useState<PrayerTimes>(() => getTodayPrayerTimes());
-  const [prayerState, setPrayerState] = useState<PrayerState>(() => resolvePrayerState(getTodayPrayerTimes(), new Date()));
-  const [hijriDateStr, setHijriDateStr] = useState<string>(() => getFormattedHijriDate(new Date(), 0, 'en'));
+  const [time, setTime] = useState<Date | null>(null);
+  const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
+  const [prayerState, setPrayerState] = useState<PrayerState | null>(null);
+  const [hijriDateStr, setHijriDateStr] = useState<string>('');
 
   const [dismissedAzan, setDismissedAzan] = useState(false);
   const [activeIqamahAlertPrayer, setActiveIqamahAlertPrayer] = useState<string | null>(null);
@@ -182,18 +191,22 @@ export const TVDisplay: React.FC = () => {
   const langMenuRef = useRef<HTMLDivElement>(null);
   const langButtonRef = useRef<HTMLButtonElement>(null);
 
-  const [clockSize, setClockSize] = useState<number>(() => {
-    if (typeof window === 'undefined') return 2;
-    return parseInt(localStorage.getItem('tv_clockSize') ?? '2', 10);
-  });
-  const [countdownSize, setCountdownSize] = useState<number>(() => {
-    if (typeof window === 'undefined') return 2;
-    return parseInt(localStorage.getItem('tv_countdownSize') ?? '2', 10);
-  });
-  const [iqamahSize, setIqamahSize] = useState<number>(() => {
-    if (typeof window === 'undefined') return 1;
-    return parseInt(localStorage.getItem('tv_iqamahSize') ?? '1', 10);
-  });
+  const [clockSize, setClockSize] = useState<number>(2);
+  const [countdownSize, setCountdownSize] = useState<number>(2);
+  const [iqamahSize, setIqamahSize] = useState<number>(1);
+
+  useEffect(() => {
+    setClockSize(parseClampedSize(localStorage.getItem('tv_clockSize'), 2));
+    setCountdownSize(parseClampedSize(localStorage.getItem('tv_countdownSize'), 2));
+    setIqamahSize(parseClampedSize(localStorage.getItem('tv_iqamahSize'), 1));
+    const now = new Date();
+    setTime(now);
+    const todayTimes = getTodayPrayerTimes(now);
+    setPrayerTimes(todayTimes);
+    setPrayerState(resolvePrayerState(todayTimes, now));
+    setHijriDateStr(getFormattedHijriDate(now, 0, 'en', false));
+    setMounted(true);
+  }, []);
   const changeSize = (key: 'clock' | 'countdown' | 'iqamah', delta: number) => {
     if (key === 'clock') {
       const v = Math.max(0, Math.min(4, clockSize + delta));
@@ -375,13 +388,32 @@ export const TVDisplay: React.FC = () => {
     return (azanMins + offsetMin) % (24 * 60);
   };
 
-  // Real-Time 1-Second Timer for Clock, Prayer Evaluation & Automated Voice Alerts
+  // Real-Time Smooth Clock Ticker (updates exactly when the second changes so no second is ever skipped)
   useEffect(() => {
-    const interval = setInterval(async () => {
-      const now = new Date();
-      setTime(now);
+    let lastSecond = Math.floor(Date.now() / 1000);
+    setTime(new Date());
 
+    const clockTicker = setInterval(() => {
+      const now = new Date();
+      const currentSecond = Math.floor(now.getTime() / 1000);
+      if (currentSecond !== lastSecond) {
+        lastSecond = currentSecond;
+        setTime(now);
+      }
+    }, 200);
+
+    return () => clearInterval(clockTicker);
+  }, []);
+
+  // Real-Time 1-Second Prayer Evaluation & Automated Voice Alerts
+  useEffect(() => {
+    let cancelled = false;
+
+    const evaluatePrayers = async () => {
+      const now = new Date();
       const activeTimes = await resolvePrayerTimesAsync(now);
+      if (cancelled) return;
+
       setPrayerTimes(activeTimes);
 
       const currentState = resolvePrayerState(activeTimes, now);
@@ -397,7 +429,7 @@ export const TVDisplay: React.FC = () => {
       }
 
       // --- AUTOMATIC AZAN & IQAMATH VOICE ALERT SYSTEM ---
-      const todayDateStr = now.toISOString().split('T')[0];
+      const todayDateStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
       clearOldPrayerAlerts(todayDateStr);
 
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -442,9 +474,15 @@ export const TVDisplay: React.FC = () => {
           }
         }
       }
-    }, 1000);
+    };
 
-    return () => clearInterval(interval);
+    evaluatePrayers();
+    const interval = setInterval(evaluatePrayers, 1000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, [settings, lang]);
 
   // 12-Second Islamic Content Slide Rotator
@@ -536,9 +574,13 @@ export const TVDisplay: React.FC = () => {
   }, []);
 
   const formatSeconds = (sec: number) => {
-    const hrs = Math.floor(sec / 3600);
-    const mins = Math.floor((sec % 3600) / 60);
-    const secs = sec % 60;
+    if (!Number.isFinite(sec) || sec < 0) {
+      return formatWithNumeralSystem('00:00:00', settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
+    }
+    const safeSec = Math.floor(sec);
+    const hrs = Math.floor(safeSec / 3600);
+    const mins = Math.floor((safeSec % 3600) / 60);
+    const secs = safeSec % 60;
     const raw = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     return formatWithNumeralSystem(raw, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
   };
@@ -617,7 +659,7 @@ export const TVDisplay: React.FC = () => {
       {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} minDurationMs={1800} />}
 
       {/* Main TV Screen: Strictly bounded to full screen height on TV/landscape, elegantly scrollable on mobile portrait */}
-      <div className="tv-container flex flex-col min-h-screen lg:h-screen lg:max-h-screen w-screen p-2 sm:p-3 lg:p-4 tv-overscan-safe select-none justify-between relative bg-[#020617] text-slate-100 overflow-y-auto lg:overflow-hidden">
+      <div className="tv-container flex flex-col min-h-[100dvh] lg:h-screen lg:max-h-screen w-full max-w-[100vw] p-2 sm:p-3 lg:p-4 tv-overscan-safe select-none justify-between relative bg-[#020617] text-slate-100 overflow-x-hidden overflow-y-auto lg:overflow-hidden">
         {/* Dynamic Royal Mosque Background Slideshow (100% Mosque Architecture, No Humans) */}
         <BackgroundMedia settings={settings.background} />
 
@@ -626,8 +668,8 @@ export const TVDisplay: React.FC = () => {
 
         {/* Full Azan Audio & Visual Modal */}
         <AdhanModal
-          prayerName={t(prayerState.nextPrayer) || prayerState.nextPrayer}
-          isOpen={prayerState.isAzanActive && !dismissedAzan}
+          prayerName={mounted && prayerState ? (t(prayerState.nextPrayer) || prayerState.nextPrayer) : ''}
+          isOpen={Boolean(mounted && prayerState?.isAzanActive && !dismissedAzan)}
           onClose={() => {
             setDismissedAzan(true);
             stopAzanAudio();
@@ -637,7 +679,7 @@ export const TVDisplay: React.FC = () => {
 
         {/* Full Iqamath Voice Alert Modal */}
         <IqamahModal
-          prayerName={activeIqamahAlertPrayer || t(prayerState.nextPrayer) || prayerState.nextPrayer}
+          prayerName={activeIqamahAlertPrayer || (mounted && prayerState ? (t(prayerState.nextPrayer) || prayerState.nextPrayer) : '')}
           isOpen={activeIqamahAlertPrayer !== null}
           onClose={() => {
             setActiveIqamahAlertPrayer(null);
@@ -647,14 +689,14 @@ export const TVDisplay: React.FC = () => {
         />
 
         {/* Top Header Bar */}
-        <header className="glass-panel flex flex-wrap sm:flex-nowrap justify-between items-center px-3 sm:px-6 py-2 sm:py-2.5 rounded-2xl shrink-0 border border-blue-500/30 shadow-2xl relative z-40 gap-2 sm:gap-3">
+        <header className="glass-panel flex flex-wrap lg:flex-nowrap justify-between items-center px-3 sm:px-5 lg:px-6 py-2 sm:py-2.5 rounded-2xl shrink-0 border border-blue-500/30 shadow-2xl relative z-40 gap-2 sm:gap-3">
           {/* Mosque Brand & Title */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 lg:flex-initial">
             <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-blue-500 via-sky-500 to-indigo-600 flex items-center justify-center font-bold text-white text-lg sm:text-2xl shadow-lg shadow-blue-500/40 border border-sky-300 shrink-0">
               🕌
             </div>
             <div className="min-w-0">
-              <h1 className={`text-sm sm:text-lg lg:text-xl xl:text-2xl 3xl:text-3xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r ${activeFontTheme.brandTitle} uppercase drop-shadow-md transition-all duration-1000 whitespace-nowrap leading-none truncate`}>
+              <h1 className={`text-sm sm:text-base lg:text-xl xl:text-2xl 3xl:text-3xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r ${activeFontTheme.brandTitle} uppercase drop-shadow-md transition-all duration-1000 leading-none truncate`}>
                 {settings.mosqueName}
               </h1>
               <div className="mt-1 flex items-center">
@@ -666,7 +708,7 @@ export const TVDisplay: React.FC = () => {
           </div>
 
           {/* Center Actions: Fullscreen, Language Switcher & Automatic Voice Alert Arm Indicator */}
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* TV Fullscreen Kiosk Mode Button */}
             <button
               onClick={toggleFullscreen}
@@ -725,7 +767,7 @@ export const TVDisplay: React.FC = () => {
 
           {/* Live Weather Widget */}
           {weatherData && (
-            <div className="hidden 2xl:flex items-center gap-2.5 bg-slate-900/80 border border-blue-500/20 px-4 py-1.5 rounded-xl backdrop-blur-md">
+            <div className="hidden 2xl:flex items-center gap-2.5 bg-slate-900/80 border border-blue-500/20 px-4 py-1.5 rounded-xl backdrop-blur-md shrink-0">
               <span className="text-2xl">{weatherData.icon}</span>
               <div>
                 <div className="flex items-center gap-1.5">
@@ -741,41 +783,54 @@ export const TVDisplay: React.FC = () => {
           )}
 
           {/* Live Clock & Dates */}
-          <div className="text-right flex items-center gap-2 sm:gap-4 shrink-0">
-            <div className={`${SIZE_LEVELS[clockSize]} font-black font-mono tracking-tight my-1 leading-none transition-all duration-1000 text-purple-300 drop-shadow-[0_0_35px_rgba(192,132,252,0.85)]`}>
-              {mounted
+          <div className="w-full lg:w-auto flex flex-wrap xs:flex-nowrap items-center justify-between lg:justify-end gap-2 sm:gap-3 lg:gap-4 pt-1.5 lg:pt-0 border-t border-white/10 lg:border-t-0 shrink-0">
+            <div className={`${CLOCK_SIZE_LEVELS[clockSize] ?? CLOCK_SIZE_LEVELS[2]} font-black font-mono tracking-tight leading-none transition-all duration-1000 text-purple-300 drop-shadow-[0_0_35px_rgba(192,132,252,0.85)]`}>
+              {mounted && time && !Number.isNaN(time.getTime())
                 ? (() => {
-                    const now = new Date();
-                    const hh = now.getHours().toString().padStart(2, '0');
-                    const mm = now.getMinutes().toString().padStart(2, '0');
-                    const ss = now.getSeconds().toString().padStart(2, '0');
+                    const rawHours = time.getHours();
+                    const ampm = rawHours >= 12 ? 'PM' : 'AM';
+                    const displayHours = settings.time24Format ? rawHours : (rawHours % 12 || 12);
+                    const hh = displayHours.toString().padStart(2, '0');
+                    const mm = time.getMinutes().toString().padStart(2, '0');
+                    const ss = time.getSeconds().toString().padStart(2, '0');
                     const formattedH = formatWithNumeralSystem(hh, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
                     const formattedM = formatWithNumeralSystem(mm, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
                     const formattedS = formatWithNumeralSystem(ss, settings.numeralSystem, lang === 'ar', settings.arabicNumerals ?? false);
+
                     return (
-                      <span className="inline-flex items-baseline">
-                        <span className="h text-5xl md:text-6xl">{formattedH}</span>
-                        <span className="colon colon-main mx-0.5 text-5xl md:text-6xl">:</span>
-                        <span className="m text-5xl md:text-6xl">{formattedM}</span>
-                        <span className="colon colon-sec text-[0.45em] opacity-80 ml-1 font-mono font-bold text-5xl md:text-6xl">:</span>
-                        <span className="s text-[0.45em] opacity-80 font-mono font-bold text-5xl md:text-6xl">{formattedS}</span>
+                      <span className="inline-flex items-baseline tabular-nums whitespace-nowrap">
+                        <span className="h">{formattedH}</span>
+                        <span className="colon colon-main mx-0.5">:</span>
+                        <span className="m">{formattedM}</span>
+                        <span className="colon colon-sec text-[0.48em] opacity-85 ml-1 font-mono font-bold">:</span>
+                        <span className="s text-[0.48em] opacity-85 font-mono font-bold">{formattedS}</span>
+                        {!settings.time24Format && (
+                          <span className="ampm text-[0.38em] opacity-90 ml-1.5 font-sans font-black tracking-wider uppercase text-sky-200">
+                            {ampm}
+                          </span>
+                        )}
                       </span>
                     );
                   })()
                 : (
-                  <span className="inline-flex items-baseline">
+                  <span className="inline-flex items-baseline tabular-nums whitespace-nowrap">
                     <span className="h">--</span>
                     <span className="colon colon-main mx-0.5">:</span>
                     <span className="m">--</span>
-                    <span className="colon colon-sec text-[0.45em] opacity-80 ml-1">:</span>
-                    <span className="s text-[0.45em] opacity-80">--</span>
+                    <span className="colon colon-sec text-[0.48em] opacity-85 ml-1">:</span>
+                    <span className="s text-[0.48em] opacity-85">--</span>
+                    {!settings.time24Format && (
+                      <span className="ampm text-[0.38em] opacity-90 ml-1.5 font-sans font-black tracking-wider uppercase text-sky-200">
+                        --
+                      </span>
+                    )}
                   </span>
                 )}
             </div>
-            <div className="h-10 sm:h-14 md:h-16 lg:h-20 w-px bg-slate-700/60 hidden sm:block" />
-            <div className="text-right flex flex-col items-end gap-1 shrink-0">
-              <div className="text-[10px] sm:text-xs md:text-sm xl:text-base font-bold text-slate-200 uppercase tracking-wide leading-tight">
-                {mounted
+            <div className="h-9 sm:h-12 lg:h-14 w-px bg-slate-700/60 hidden sm:block" />
+            <div className="text-right flex flex-col items-end gap-0.5 min-w-0">
+              <div className="text-[10px] sm:text-xs md:text-sm xl:text-base font-bold text-slate-200 uppercase tracking-wide leading-tight truncate max-w-full">
+                {mounted && time
                   ? formatLocalizedDate(
                       time,
                       lang,
@@ -783,8 +838,8 @@ export const TVDisplay: React.FC = () => {
                     )
                   : '---'}
               </div>
-              <div className={`text-xs sm:text-sm md:text-base xl:text-lg font-arabic font-bold mt-1 transition-colors duration-1000 leading-tight ${activeFontTheme.accentText}`}>
-                {mounted ? hijriDateStr : '---'}
+              <div className={`text-[11px] sm:text-sm md:text-base xl:text-lg font-arabic font-bold transition-colors duration-1000 leading-tight truncate max-w-full ${activeFontTheme.accentText}`}>
+                {mounted && hijriDateStr ? hijriDateStr : '---'}
               </div>
             </div>
             <button
@@ -816,8 +871,8 @@ export const TVDisplay: React.FC = () => {
             <div className={`col-span-1 lg:col-span-8 grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 ${prayersList.length > 5 ? 'lg:grid-cols-3 lg:grid-rows-2' : 'lg:grid-cols-5 lg:grid-rows-1'} gap-2 sm:gap-3 xl:gap-3.5 h-auto lg:h-full min-h-0`}>
               {prayersList.map((item) => {
                 const isSunrise = item.key === 'sunrise';
-                const isActive = prayerState.nextPrayer === item.key;
-                const iqamahInfo = (!isSunrise && item.iqamahKey)
+                const isActive = mounted && prayerState?.nextPrayer === item.key;
+                const iqamahInfo = (mounted && !isSunrise && item.iqamahKey)
                   ? computeIqamahTimeStr(item.iqamahKey, item.azan24)
                   : null;
 
@@ -848,8 +903,8 @@ export const TVDisplay: React.FC = () => {
                     {isSunrise ? (
                       /* Sunrise Section: Centered, huge, bold time with ZERO Iqamath option */
                       <div className="flex-1 flex flex-col items-center justify-center my-0.5">
-                        <div className="text-2xl sm:text-3xl lg:text-3xl xl:text-4xl 2xl:text-5xl 3xl:text-6xl font-black font-mono tracking-tight leading-none text-white drop-shadow-xl">
-                          {formatDisplayTime(item.azan24)}
+                        <div className="text-xl xs:text-2xl sm:text-3xl lg:text-3xl xl:text-4xl 2xl:text-5xl 3xl:text-6xl font-black font-mono tracking-tight leading-none text-white drop-shadow-xl whitespace-nowrap">
+                          {mounted ? formatDisplayTime(item.azan24) : '--:--'}
                         </div>
                       </div>
                     ) : (
@@ -858,10 +913,10 @@ export const TVDisplay: React.FC = () => {
                         <span className="text-[9px] sm:text-[10px] xl:text-xs font-black uppercase tracking-wider text-slate-300 block mb-0.5">
                           {t('azan')}
                         </span>
-                        <div className={`text-2xl sm:text-3xl lg:text-3xl xl:text-4xl 2xl:text-5xl 3xl:text-6xl font-black font-mono tracking-tight leading-none drop-shadow-xl transition-all duration-1000 ${
+                        <div className={`text-xl xs:text-2xl sm:text-3xl lg:text-3xl xl:text-4xl 2xl:text-5xl 3xl:text-6xl font-black font-mono tracking-tight leading-none drop-shadow-xl transition-all duration-1000 whitespace-nowrap ${
                           isActive ? activeFontTheme.prayerActiveTime : 'text-white'
                         }`}>
-                          {formatDisplayTime(item.azan24)}
+                          {mounted ? formatDisplayTime(item.azan24) : '--:--'}
                         </div>
                       </div>
                     )}
@@ -876,13 +931,13 @@ export const TVDisplay: React.FC = () => {
                       </div>
                     ) : (
                       /* Daily 5 Prayers: Subah, Luhar, Asr, Maghrib, Isha Iqamah Sub-Panel */
-                      <div className="bg-slate-950/80 border border-white/10 rounded-xl px-2 sm:px-2.5 xl:px-3 py-1 sm:py-1.5 xl:py-2 flex justify-between items-center shrink-0 shadow-inner">
-                        <span className="text-[9px] sm:text-[10px] xl:text-xs 2xl:text-sm font-black uppercase tracking-wider text-slate-200">
+                      <div className="bg-slate-950/80 border border-white/10 rounded-xl px-2 sm:px-2.5 xl:px-3 py-1 sm:py-1.5 xl:py-2 flex justify-between items-center gap-2 shrink-0 shadow-inner">
+                        <span className="text-[9px] sm:text-[10px] xl:text-xs 2xl:text-sm font-black uppercase tracking-wider text-slate-200 shrink-0">
                           {t('iqamah')}
                         </span>
                         {iqamahInfo ? (
-                          <div className="text-right">
-                            <span className={`font-mono font-black text-base sm:text-lg xl:text-2xl 2xl:text-3xl 3xl:text-4xl block leading-none transition-colors duration-1000 ${
+                          <div className="text-right min-w-0">
+                            <span className={`font-mono font-black text-sm xs:text-base sm:text-lg xl:text-2xl 2xl:text-3xl 3xl:text-4xl block leading-none transition-colors duration-1000 whitespace-nowrap ${
                               isActive ? activeFontTheme.accentText : 'text-sky-300'
                             }`}>
                               {iqamahInfo.formatted}
@@ -894,7 +949,7 @@ export const TVDisplay: React.FC = () => {
                             )}
                           </div>
                         ) : (
-                          <span className="text-slate-500 font-mono font-bold text-base sm:text-lg">-</span>
+                          <span className="text-slate-500 font-mono font-bold text-base sm:text-lg">--:--</span>
                         )}
                       </div>
                     )}
@@ -909,11 +964,13 @@ export const TVDisplay: React.FC = () => {
               <div className="glass-card-hero p-3.5 sm:p-4 rounded-2xl flex flex-col items-center justify-center text-center relative overflow-hidden border border-sky-400/40 shadow-2xl flex-[1.2] min-h-0">
                 <div className={`absolute top-0 left-0 w-full h-1.5 transition-all duration-1000 ${activeFontTheme.cardActiveGlow} animate-pulse`} />
                 <span className={`text-[10px] sm:text-xs font-black tracking-widest uppercase px-3 sm:px-4 py-1 rounded-full border mb-1.5 shadow-md transition-all duration-1000 ${activeFontTheme.badgeBorder}`}>
-                  {t('countdownTo')} {(t(prayerState.nextPrayer) || prayerState.nextPrayer).toUpperCase()}
+                  {mounted && prayerState
+                    ? `${t('countdownTo')} ${(t(prayerState.nextPrayer) || prayerState.nextPrayer).toUpperCase()}`
+                    : `${t('countdownTo')} ---`}
                 </span>
 
-                <div className={`${SIZE_LEVELS[countdownSize]} font-black font-mono tracking-tight my-1 leading-none transition-all duration-1000 ${activeFontTheme.countdownGlow}`}>
-                  {formatSeconds(prayerState.timeRemainingSeconds)}
+                <div className={`${SIZE_LEVELS[countdownSize] ?? SIZE_LEVELS[2]} font-black font-mono tracking-tight my-1 leading-none transition-all duration-1000 tabular-nums whitespace-nowrap ${activeFontTheme.countdownGlow}`}>
+                  {mounted && prayerState ? formatSeconds(prayerState.timeRemainingSeconds) : '00:00:00'}
                 </div>
 
                 {/* Animated Progress Bar */}
@@ -921,7 +978,9 @@ export const TVDisplay: React.FC = () => {
                   <div
                     className={`h-full rounded-full transition-all duration-1000 shadow-md ${activeFontTheme.cardActiveGlow}`}
                     style={{
-                      width: `${Math.min(100, Math.max(5, ((86400 - prayerState.timeRemainingSeconds) / 86400) * 100))}%`
+                      width: mounted && prayerState
+                        ? `${Math.min(100, Math.max(5, ((86400 - prayerState.timeRemainingSeconds) / 86400) * 100))}%`
+                        : '5%'
                     }}
                   />
                 </div>
@@ -929,12 +988,12 @@ export const TVDisplay: React.FC = () => {
 
               {/* Box 2: Next Prayer & Voice Alert Live Status Box */}
               <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-950/75 border border-white/10 flex flex-col justify-between flex-[0.9] min-h-0 shadow-xl overflow-hidden">
-                <div className="flex justify-between items-center text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-300 border-b border-white/10 pb-1.5">
-                  <span className="flex items-center gap-1.5">
-                    <span className="text-sky-400">🕒</span>
-                    <span>NEXT PRAYER &amp; VOICE ALERT</span>
+                <div className="flex justify-between items-center text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-300 border-b border-white/10 pb-1.5 gap-2">
+                  <span className="flex items-center gap-1.5 min-w-0 truncate">
+                    <span className="text-sky-400 shrink-0">🕒</span>
+                    <span className="truncate">NEXT PRAYER &amp; VOICE ALERT</span>
                   </span>
-                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold shrink-0 ${
                     settings.azanAudio.enabled
                       ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                       : 'bg-slate-800 text-slate-400'
@@ -943,19 +1002,23 @@ export const TVDisplay: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 my-1">
-                  <div className="bg-slate-900/80 p-2 rounded-xl border border-white/5">
+                <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 my-1">
+                  <div className="bg-slate-900/80 p-2 rounded-xl border border-white/5 min-w-0">
                     <span className="text-[10px] uppercase font-bold text-slate-400 block">Next Azan Call</span>
-                    <span className={`${IQAMAH_SIZE_LEVELS[iqamahSize]} font-black font-mono text-white`}>
-                      {formatDisplayTime((prayerTimes as any)?.[prayerState.nextPrayer])}
+                    <span className={`${IQAMAH_SIZE_LEVELS[iqamahSize] ?? IQAMAH_SIZE_LEVELS[1]} font-black font-mono text-white whitespace-nowrap block truncate`}>
+                      {mounted && prayerTimes && prayerState
+                        ? formatDisplayTime((prayerTimes as any)?.[prayerState.nextPrayer])
+                        : '--:--'}
                     </span>
                   </div>
-                  <div className="bg-slate-900/80 p-2 rounded-xl border border-white/5">
+                  <div className="bg-slate-900/80 p-2 rounded-xl border border-white/5 min-w-0">
                     <span className="text-[10px] uppercase font-bold text-slate-400 block">Next Iqamath Call</span>
-                    <span className={`${IQAMAH_SIZE_LEVELS[iqamahSize]} font-black font-mono text-sky-300`}>
-                      {prayerState.nextPrayer !== 'sunrise'
-                        ? computeIqamahTimeStr(prayerState.nextPrayer as any, (prayerTimes as any)?.[prayerState.nextPrayer]).formatted
-                        : 'No Iqamah'}
+                    <span className={`${IQAMAH_SIZE_LEVELS[iqamahSize] ?? IQAMAH_SIZE_LEVELS[1]} font-black font-mono text-sky-300 whitespace-nowrap block truncate`}>
+                      {mounted && prayerTimes && prayerState
+                        ? (prayerState.nextPrayer !== 'sunrise'
+                          ? computeIqamahTimeStr(prayerState.nextPrayer as any, (prayerTimes as any)?.[prayerState.nextPrayer]).formatted
+                          : 'No Iqamah')
+                        : '--:--'}
                     </span>
                   </div>
                 </div>
@@ -1169,7 +1232,7 @@ export const TVDisplay: React.FC = () => {
               {/* Language Selection */}
               <div>
                 <label className="block text-xs font-bold text-slate-300 uppercase mb-2">Display Language</label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {LANGUAGES.map((l) => (
                     <button
                       key={l.code}
@@ -1188,7 +1251,7 @@ export const TVDisplay: React.FC = () => {
 
               {/* Numeral System & Arabic Format Setting */}
               <div className="bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800">
-                <div className="flex justify-between items-center mb-2">
+                <div className="flex flex-wrap justify-between items-center gap-1 mb-2">
                   <label className="text-xs font-bold text-slate-300 uppercase">
                     {t('numeralFormat')} / Numeral System
                   </label>
@@ -1200,7 +1263,7 @@ export const TVDisplay: React.FC = () => {
                         : 'Default Western (0-9)'}
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <button
                     onClick={() => {
                       const updated = {
@@ -1267,7 +1330,7 @@ export const TVDisplay: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-5 gap-2 mb-3">
+                <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-2 mb-3">
                   {FONT_THEMES.map((theme, idx) => (
                     <button
                       key={theme.id}
@@ -1336,7 +1399,7 @@ export const TVDisplay: React.FC = () => {
       </div>
 
       {/* Multilingual Selector Dropdown Portal - Rendered directly in document.body at z-[9999] */}
-      {mounted && showLangMenu && typeof document !== 'undefined' && createPortal(
+      {mounted && showLangMenu && (
         <div className="portal-language-menu">
           {/* Backdrop overlay for quick click-away */}
           <div
@@ -1374,6 +1437,9 @@ export const TVDisplay: React.FC = () => {
               <button
                 type="button"
                 onClick={() => {
+                 
+                 
+                 
                   setLanguage('en');
                   setShowLangMenu(false);
                 }}
@@ -1508,8 +1574,7 @@ export const TVDisplay: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
     </>
   );
